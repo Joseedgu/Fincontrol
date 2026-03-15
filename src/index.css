@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  
+  --color-navy: #042B49;
+  --color-navy-hover: #003666;
+  --color-cyan: #00C6FF;
+  
+  --color-emerald: #00C48C;
+  --color-emerald-bg: rgba(0, 196, 140, 0.1);
+  --color-emerald-hover: #00A375;
+  
+  --color-danger: #DC2626;
+  --color-danger-bg: #FEE2E2;
+  
+  --color-surface: #F8FAFC; 
+  --color-white: #FFFFFF;
+  --color-border: #E5E7EB;
+  
+  --color-text-primary: #111827;
+  --color-text-secondary: #4B5563;
+  --color-text-muted: #9CA3AF;
+  
+  --color-input-bg: #F1F5F9;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--color-surface);
+  background-image: radial-gradient(var(--color-text-muted) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Base App Container used everywhere */
+.app-window {
+  width: 100%;
+  max-width: 1440px;
+  height: calc(100vh - 48px);
+  min-height: 600px;
+  background-color: var(--color-white);
+  border-radius: 32px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  border: 4px solid rgba(255, 255, 255, 0.6);
+  position: relative;
+  display: flex;
+}
+
+/* Only apply this when viewing Auth so it centers a smaller window */
+.app-window-auth {
+  max-width: 1000px;
+  height: auto;
+  min-height: 500px;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
