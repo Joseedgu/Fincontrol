@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinControl API Test UI</title>
+  <style>
+    :root {
+      --bg: #f3f5fb;
+      --panel: #ffffff;
+      --navy: #072f63;
+      --navy-2: #0d3f7f;
+      --navy-soft: #dfe8ff;
+      --text: #10233f;
+      --muted: #66758d;
+      --line: #e5e9f2;
+      --mint: #8df0df;
+      --green: #0c8f78;
+      --red: #d44b4b;
+      --danger-soft: #ffe9ea;
+      --success-soft: #dff9f1;
+      --shadow: 0 18px 40px rgba(16, 35, 63, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+    }
+
+    .sidebar {
+      background: #eef2fb;
+      border-right: 1px solid var(--line);
+      padding: 24px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .brand {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+
+    .brand small {
+      display: block;
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+
+    .nav-section { display: grid; gap: 10px; }
+    .nav-btn {
+      border: 0;
+      border-radius: 12px;
+      background: transparent;
+      text-align: left;
+      padding: 12px 14px;
+      font-size: 15px;
+      cursor: pointer;
+      color: #415065;
+      transition: .2s;
+    }
+    .nav-btn.active,
+    .nav-btn:hover { background: #dbe7ff; color: var(--navy); }
+
+    .logout-btn {
+      margin-top: auto;
+      border: 0;
+      background: transparent;
+      color: #db4e58;
+      text-align: left;
+      padding: 12px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .main {
+      padding: 22px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .topbar {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .search-box,
+    .config-box {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 280px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .search-box input,
+    .config-box input,
+    .config-box select,
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      border: 0;
+      outline: none;
+      background: transparent;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .config-box {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      min-width: 320px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 18px;
+    }
+
+    .hero-left {
+      background: linear-gradient(180deg, #032c63 0%, #042a56 100%);
+      color: white;
+      min-height: 320px;
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+
+    .hero-left .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .logo-badge {
+      width: 54px;
+      height: 46px;
+      border-radius: 8px;
+      background: linear-gradient(180deg, #8ff0e2, #7ce2d4);
+      color: #0c4770;
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+      font-weight: 900;
+    }
+
+    .hero-title {
+      font-size: 58px;
+      line-height: 0.95;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      max-width: 460px;
+    }
+
+    .hero-title .accent { color: var(--mint); }
+
+    .hero-subtitle {
+      max-width: 480px;
+      color: #a8bfdf;
+      font-size: 17px;
+      line-height: 1.6;
+    }
+
+    .hero-card {
+      margin-top: auto;
+      background: rgba(110, 163, 238, 0.22);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 18px;
+    }
+
+    .auth-panel h2 {
+      font-size: 32px;
+      margin: 0 0 8px;
+      letter-spacing: -0.04em;
+    }
+
+    .auth-panel p { color: var(--muted); margin: 0 0 20px; }
+
+    .auth-switch {
+      display: inline-flex;
+      background: #edf1fa;
+      border-radius: 999px;
+      padding: 4px;
+      margin-bottom: 20px;
+    }
+
+    .auth-switch button {
+      border: 0;
+      background: transparent;
+      padding: 10px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      color: #415065;
+      font-weight: 600;
+    }
+
+    .auth-switch button.active {
+      background: white;
+      color: var(--navy);
+      box-shadow: 0 6px 16px rgba(16, 35, 63, 0.09);
+    }
+
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .field { display: grid; gap: 8px; margin-bottom: 14px; }
+    .field label { font-size: 14px; color: #3d4b5f; font-weight: 600; }
+    .input-wrap {
+      background: #f0f3fb;
+      border: 1px solid #e3e8f4;
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+
+    .check-row,
+    .inline-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .primary-btn,
+    .secondary-btn,
+    .small-btn {
+      border: 0;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: .2s;
+    }
+
+    .primary-btn {
+      width: 100%;
+      background: var(--navy);
+      color: white;
+      padding: 15px 18px;
+      font-size: 16px;
+      box-shadow: 0 12px 24px rgba(7, 47, 99, 0.18);
+    }
+
+    .primary-btn:hover { background: var(--navy-2); }
+    .secondary-btn {
+      background: #eaf0fb;
+      color: var(--navy);
+      padding: 12px 14px;
+    }
+    .small-btn {
+      background: #edf2fb;
+      color: #314054;
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+
+    .muted-link {
+      color: #0f7f73;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .hidden { display: none !important; }
+
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .dashboard-header h1 {
+      margin: 0;
+      font-size: 32px;
+      letter-spacing: -0.04em;
+    }
+
+    .dashboard-header p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 10px 14px;
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: #254463;
+      background: #fbe8c6;
+    }
+
+    .cards-3 {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr 1fr;
+      gap: 18px;
+    }
+
+    .balance-card {
+      background: linear-gradient(180deg, #042e68 0%, #052a5b 100%);
+      color: white;
+      min-height: 166px;
+    }
+
+    .eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: .14em; color: #93b3d7; }
+    .amount { font-size: 28px; font-weight: 800; letter-spacing: -0.03em; margin-top: 12px; }
+    .trend { margin-top: 14px; font-size: 14px; color: var(--mint); font-weight: 700; }
+
+    .stat-card .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .icon-box {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+    }
+    .icon-income { background: var(--success-soft); color: var(--green); }
+    .icon-expense { background: var(--danger-soft); color: var(--red); }
+    .tag {
+      font-size: 11px;
+      padding: 6px 8px;
+      border-radius: 999px;
+      font-weight: 800;
+    }
+    .tag-green { background: var(--success-soft); color: var(--green); }
+    .tag-red { background: var(--danger-soft); color: var(--red); }
+    .progress {
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: #dfe9ff;
+      overflow: hidden;
+      margin-top: 10px;
+      margin-bottom: 8px;
+    }
+    .progress span {
+      display: block;
+      height: 100%;
+      background: var(--navy);
+      border-radius: 999px;
+    }
+    .progress.green span { background: #0a7f6c; }
+    .progress.red span { background: #cc2727; }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1.35fr .75fr;
+      gap: 18px;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .section-title h3 { margin: 0; font-size: 18px; }
+    .section-title button, .section-title a {
+      border: 0; background: transparent; color: #0d7f74; font-weight: 700; cursor: pointer; text-decoration: none;
+    }
+
+    .transaction-list,
+    .goal-list,
+    .simple-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .transaction-item,
+    .goal-item,
+    .list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .left-group { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .round-icon {
+      width: 38px; height: 38px; border-radius: 999px; background: #eef2fb; display: grid; place-items: center; font-size: 18px;
+    }
+    .title { font-weight: 700; }
+    .sub { color: var(--muted); font-size: 13px; margin-top: 3px; }
+    .amount-pos { color: #0b8d78; font-weight: 800; }
+    .amount-neg { color: #2e3d52; font-weight: 800; }
+    .divider { height: 1px; background: var(--line); }
+
+    .goal-item { align-items: flex-start; }
+    .goal-right { min-width: 150px; }
+    .goal-right .progress { margin-top: 6px; margin-bottom: 0; }
+
+    .module-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .stack { display: grid; gap: 18px; }
+    .button-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #0b1730;
+      color: #d8e7ff;
+      padding: 16px;
+      border-radius: 14px;
+      overflow: auto;
+      max-height: 380px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .status-bar {
+      background: #10223f;
+      color: #d8e6ff;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 14px;
+    }
+
+    .pill {
+      background: #e8eefc;
+      color: #294669;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 1100px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { order: 2; }
+      .main { order: 1; }
+      .hero-grid, .cards-3, .content-grid, .module-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">FinControl<small>HTML de prueba para consumir el backend</small></div>
+      <div class="nav-section">
+        <button class="nav-btn active" data-section="authSection">Autenticaci&oacute;n</button>
+        <button class="nav-btn" data-section="dashboardSection">Panel</button>
+        <button class="nav-btn" data-section="transactionsSection">Ingresos / Gastos</button>
+        <button class="nav-btn" data-section="goalsSection">Metas</button>
+        <button class="nav-btn" data-section="reportsSection">Reportes</button>
+        <button class="nav-btn" data-section="settingsSection">Configuraci&oacute;n</button>
+        <button class="nav-btn" data-section="debugSection">Debug API</button>
+      </div>
+      <button class="logout-btn" id="logoutBtn">Cerrar sesi&oacute;n</button>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="search-box">
+          <span>&#128269;</span>
+          <input id="searchInput" type="text" placeholder="Buscar transacciones, reportes..." />
+        </div>
+        <div class="config-box">
+          <span class="pill">Base URL</span>
+          <input id="baseUrl" type="text" value="http://localhost:3000" />
+          <button class="small-btn" id="saveBaseUrlBtn">Guardar</button>
+        </div>
+      </div>
+
+      <section id="authSection" class="section-view">
+        <div class="hero-grid">
+          <div class="panel hero-left">
+            <div class="logo">
+              <div class="logo-badge">F</div>
+              <div>FinControl</div>
+            </div>
+            <div class="hero-title">Controla tu dinero<br /><span class="accent">con claridad.</span></div>
+            <div class="hero-subtitle">Este HTML consume el backend real para que puedas validar exactamente c&oacute;mo el frontend leer&aacute; autenticaci&oacute;n, dashboard, transacciones, metas, reportes y configuraci&oacute;n.</div>
+            <div class="hero-card">
+              <div style="font-weight:700; color:#91f2e0; margin-bottom:8px;">Ideal para entregar al frontend</div>
+              <div style="color:#c1d1ea; line-height:1.6;">Puedes probar registro, login, recuperaci&oacute;n de contrase&ntilde;a, perfil, settings y todas las entidades visibles del dise&ntilde;o desde una sola pantalla.</div>
+            </div>
+          </div>
+
+          <div class="panel auth-panel">
+            <div class="auth-switch">
+              <button id="showLoginBtn" class="active" type="button">Iniciar sesi&oacute;n</button>
+              <button id="showRegisterBtn" type="button">Crear cuenta</button>
+              <button id="showForgotBtn" type="button">Recuperar clave</button>
+            </div>
+
+            <div id="loginFormWrap">
+              <h2>Bienvenido de Nuevo</h2>
+              <p>Ingresa tus credenciales para acceder a tu libro contable.</p>
+              <div class="field">
+                <label>Correo Electr&oacute;nico</label>
+                <div class="input-wrap"><input id="loginEmail" type="email" placeholder="nombre@empresa.com" /></div>
+              </div>
+              <div class="field">
+                <div class="inline-row">
+                  <label>Contrase&ntilde;a</label>
+                  <a class="muted-link" id="quickForgotLink">&iquest;Olvidaste tu contrase&ntilde;a?</a>
+                </div>
+                <div class="input-wrap"><input id="loginPassword" type="password" placeholder="********" /></div>
+              </div>
+              <div class="check-row" style="margin-bottom:18px;">
+                <label><input id="rememberDevice" type="checkbox" /> Recordar este dispositivo</label>
+                <span class="pill" id="sessionState">Sin sesi&oacute;n</span>
+              </div>
+              <button class="primary-btn" id="loginBtn">Iniciar sesi&oacute;n &rarr;</button>
+              <div class="button-row" style="margin-top:14px;">
+                <button class="small-btn" id="fillSeedLoginBtn">Autollenar usuario seed</button>
+                <button class="small-btn" id="fillInvalidLoginBtn">Autollenar inv&aacute;lido</button>
+                <button class="small-btn" id="clearLoginBtn">Limpiar</button>
+              </div>
+            </div>
+
+            <div id="registerFormWrap" class="hidden">
+              <h2>Crear Cuenta</h2>
+              <p>Por favor, ingresa tus datos para comenzar.</p>
+              <div class="field">
+                <label>Nombre Completo</label>
+                <div class="input-wrap"><input id="registerName" type="text" placeholder="Juan P&eacute;rez" /></div>
+              </div>
+              <div class="field">
+                <label>Correo Electr&oacute;nico</label>
+                <div class="input-wrap"><input id="registerEmail" type="email" placeholder="nombre@empresa.com" /></div>
+              </div>
+              <div class="field-grid">
+                <div class="field">
+                  <label>Contrase&ntilde;a</label>
+                  <div class="input-wrap"><input id="registerPassword" type="password" placeholder="********" /></div>
+                </div>
+                <div class="field">
+                  <label>Confirmar Contrase&ntilde;a</label>
+                  <div class="input-wrap"><input id="registerConfirmPassword" type="password" placeholder="********" /></div>
+                </div>
+              </div>
+              <div class="check-row" style="margin-bottom:18px;">
+                <label><input id="acceptTerms" type="checkbox" checked /> Acepto los T&eacute;rminos de Servicio y la Pol&iacute;tica de Privacidad.</label>
+              </div>
+              <button class="primary-btn" id="registerBtn">Crear Cuenta &rarr;</button>
+              <div class="button-row" style="margin-top:14px;">
+                <button class="small-btn" id="fillRegisterValidBtn">Autollenar v&aacute;lido</button>
+                <button class="small-btn" id="fillRegisterMismatchBtn">Autollenar error</button>
+                <button class="small-btn" id="clearRegisterBtn">Limpiar</button>
+              </div>
+            </div>
+
+            <div id="forgotFormWrap" class="hidden">
+              <h2>Recuperar Contrase&ntilde;a</h2>
+              <p>Primero genera un token con tu correo, luego &uacute;salo para cambiar la clave desde este mismo HTML.</p>
+              <div class="field">
+                <label>Correo Electr&oacute;nico</label>
+                <div class="input-wrap"><input id="forgotEmail" type="email" placeholder="nombre@empresa.com" /></div>
+              </div>
+              <button class="primary-btn" id="forgotBtn">Solicitar token de recuperaci&oacute;n</button>
+              <div class="field" style="margin-top:18px;">
+                <label>Token de recuperaci&oacute;n</label>
+                <div class="input-wrap"><input id="resetToken" type="text" placeholder="token dev" /></div>
+              </div>
+              <div class="field-grid">
+                <div class="field">
+                  <label>Nueva contrase&ntilde;a</label>
+                  <div class="input-wrap"><input id="resetPassword" type="password" placeholder="********" /></div>
+                </div>
+                <div class="field">
+                  <label>Confirmar nueva contrase&ntilde;a</label>
+                  <div class="input-wrap"><input id="resetConfirmPassword" type="password" placeholder="********" /></div>
+                </div>
+              </div>
+              <button class="secondary-btn" id="resetBtn" style="width:100%;">Restablecer contrase&ntilde;a</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="dashboardSection" class="section-view hidden">
+        <div class="dashboard-header">
+          <div>
+            <h1 id="greetingText">&iexcl;Bienvenido de nuevo!</h1>
+            <p id="greetingSubtitle">Tu salud financiera se ver&aacute; aqu&iacute; cuando consumas <code>GET /api/dashboard</code>.</p>
+          </div>
+          <div class="user-chip">
+            <div class="avatar" id="headerAvatar">?</div>
+            <div>
+              <div class="title" id="headerUserName">Sin usuario</div>
+              <div class="sub" id="headerUserEmail">No autenticado</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cards-3">
+          <div class="panel balance-card">
+            <div class="eyebrow">Saldo Total</div>
+            <div class="amount" id="cardBalance">RD$ 0.00</div>
+            <div class="trend" id="cardBalanceTrend">&#8599; 0% desde el mes pasado</div>
+          </div>
+          <div class="panel stat-card">
+            <div class="top">
+              <div class="icon-box icon-income">&#8601;</div>
+              <div class="tag tag-green">DEPOSITADO</div>
+            </div>
+            <div class="sub">Ingresos Mensuales</div>
+            <div class="amount" style="color:var(--text);" id="cardIncome">RD$ 0.00</div>
+            <div class="progress"><span id="incomeProgressBar" style="width:0%"></span></div>
+            <div class="sub" id="cardIncomeLabel">0% de los ingresos mensuales proyectados</div>
+          </div>
+          <div class="panel stat-card">
+            <div class="top">
+              <div class="icon-box icon-expense">&#8599;</div>
+              <div class="tag tag-red">RETIRADO</div>
+            </div>
+            <div class="sub">Gastos Mensuales</div>
+            <div class="amount" style="color:var(--text);" id="cardExpense">RD$ 0.00</div>
+            <div class="progress red"><span id="expenseProgressBar" style="width:0%"></span></div>
+            <div class="sub" id="cardExpenseLabel">A&uacute;n no hay presupuesto configurado</div>
+          </div>
+        </div>
+
+        <div class="content-grid">
+          <div class="panel">
+            <div class="section-title">
+              <h3>Transacciones Recientes</h3>
+              <button id="refreshDashboardBtn">Ver / refrescar</button>
+            </div>
+            <div class="transaction-list" id="recentTransactionsList">
+              <div class="sub">A&uacute;n no hay transacciones para mostrar.</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="section-title">
+              <h3>Metas Futuras</h3>
+              <button id="refreshGoalsFromDashboardBtn">Ver todo</button>
+            </div>
+            <div class="goal-list" id="dashboardGoalsList">
+              <div class="sub">A&uacute;n no hay metas configuradas.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="transactionsSection" class="section-view hidden">
+        <div class="module-grid">
+          <div class="panel">
+            <div class="section-title"><h3>Crear / editar transacci&oacute;n</h3><button id="clearTransactionFormBtn">Limpiar</button></div>
+            <input type="hidden" id="transactionId" />
+            <div class="field"><label>T&iacute;tulo</label><div class="input-wrap"><input id="transactionTitle" type="text" placeholder="Apple Store - MacBook Pro" /></div></div>
+            <div class="field-grid">
+              <div class="field"><label>Tipo</label><div class="input-wrap"><select id="transactionType"><option value="income">income</option><option value="expense">expense</option></select></div></div>
+              <div class="field"><label>Categor&iacute;a</label><div class="input-wrap"><input id="transactionCategory" type="text" placeholder="Tienda / Freelance" /></div></div>
+            </div>
+            <div class="field-grid">
+              <div class="field"><label>Monto</label><div class="input-wrap"><input id="transactionAmount" type="number" step="0.01" placeholder="8500" /></div></div>
+              <div class="field"><label>Fecha</label><div class="input-wrap"><input id="transactionDate" type="date" /></div></div>
+            </div>
+            <div class="field-grid">
+              <div class="field"><label>Merchant</label><div class="input-wrap"><input id="transactionMerchant" type="text" placeholder="Apple Store" /></div></div>
+              <div class="field"><label>Icon</label><div class="input-wrap"><input id="transactionIcon" type="text" placeholder="briefcase" /></div></div>
+            </div>
+            <div class="field"><label>Descripci&oacute;n</label><div class="input-wrap"><textarea id="transactionDescription" rows="3" placeholder="opcional"></textarea></div></div>
+            <div class="button-row">
+              <button class="primary-btn" style="width:auto; flex:1;" id="saveTransactionBtn">Guardar transacci&oacute;n</button>
+              <button class="secondary-btn" id="loadTransactionsBtn">Refrescar listado</button>
+            </div>
+          </div>
+
+          <div class="panel stack">
+            <div>
+              <div class="section-title"><h3>Filtros de consulta</h3><button id="resetTransactionFiltersBtn">Reset</button></div>
+              <div class="field-grid">
+                <div class="field"><label>Tipo</label><div class="input-wrap"><select id="filterTransactionType"><option value="">Todos</option><option value="income">income</option><option value="expense">expense</option></select></div></div>
+                <div class="field"><label>Categor&iacute;a</label><div class="input-wrap"><input id="filterTransactionCategory" type="text" placeholder="Freelance" /></div></div>
+              </div>
+              <div class="field-grid">
+                <div class="field"><label>Mes</label><div class="input-wrap"><input id="filterTransactionMonth" type="number" min="1" max="12" placeholder="10" /></div></div>
+                <div class="field"><label>A&ntilde;o</label><div class="input-wrap"><input id="filterTransactionYear" type="number" placeholder="2026" /></div></div>
+              </div>
+              <div class="button-row">
+                <button class="secondary-btn" id="applyTransactionFiltersBtn">Aplicar filtros</button>
+              </div>
+            </div>
+            <div>
+              <div class="section-title"><h3>Listado</h3><span class="pill" id="transactionsCount">0 items</span></div>
+              <div class="simple-list" id="transactionsList"><div class="sub">No hay transacciones cargadas.</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="goalsSection" class="section-view hidden">
+        <div class="module-grid">
+          <div class="panel">
+            <div class="section-title"><h3>Crear / editar meta</h3><button id="clearGoalFormBtn">Limpiar</button></div>
+            <input type="hidden" id="goalId" />
+            <div class="field"><label>T&iacute;tulo</label><div class="input-wrap"><input id="goalTitle" type="text" placeholder="Viaje a Jap&oacute;n" /></div></div>
+            <div class="field-grid">
+              <div class="field"><label>Monto objetivo</label><div class="input-wrap"><input id="goalTargetAmount" type="number" step="0.01" placeholder="115000" /></div></div>
+              <div class="field"><label>Monto actual</label><div class="input-wrap"><input id="goalCurrentAmount" type="number" step="0.01" placeholder="92000" /></div></div>
+            </div>
+            <div class="field-grid">
+              <div class="field"><label>Fecha l&iacute;mite</label><div class="input-wrap"><input id="goalDeadline" type="date" /></div></div>
+              <div class="field"><label>Color</label><div class="input-wrap"><input id="goalColor" type="text" placeholder="blue / green" /></div></div>
+            </div>
+            <div class="field"><label><input id="goalCompleted" type="checkbox" /> Meta completada</label></div>
+            <div class="button-row">
+              <button class="primary-btn" style="width:auto; flex:1;" id="saveGoalBtn">Guardar meta</button>
+              <button class="secondary-btn" id="loadGoalsBtn">Refrescar metas</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="section-title"><h3>Metas cargadas</h3><span class="pill" id="goalsCount">0 items</span></div>
+            <div class="goal-list" id="goalsList"><div class="sub">No hay metas cargadas.</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="reportsSection" class="section-view hidden">
+        <div class="module-grid">
+          <div class="panel stack">
+            <div class="section-title"><h3>Consultar reportes</h3><button id="loadReportsBtn">Cargar todo</button></div>
+            <div class="field-grid">
+              <div class="field"><label>Mes</label><div class="input-wrap"><input id="reportMonth" type="number" min="1" max="12" placeholder="10" /></div></div>
+              <div class="field"><label>A&ntilde;o</label><div class="input-wrap"><input id="reportYear" type="number" placeholder="2026" /></div></div>
+            </div>
+            <div class="button-row">
+              <button class="secondary-btn" id="loadOverviewBtn">Overview</button>
+              <button class="secondary-btn" id="loadIncomeVsExpensesBtn">Income vs expenses</button>
+              <button class="secondary-btn" id="loadByCategoryBtn">By category</button>
+            </div>
+          </div>
+          <div class="panel stack">
+            <div>
+              <div class="section-title"><h3>Overview</h3></div>
+              <div id="reportOverviewBox" class="simple-list"><div class="sub">Sin datos.</div></div>
+            </div>
+            <div>
+              <div class="section-title"><h3>Income vs Expenses</h3></div>
+              <div id="reportIncomeExpenseBox" class="simple-list"><div class="sub">Sin datos.</div></div>
+            </div>
+            <div>
+              <div class="section-title"><h3>By Category</h3></div>
+              <div id="reportCategoryBox" class="simple-list"><div class="sub">Sin datos.</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="settingsSection" class="section-view hidden">
+        <div class="module-grid">
+          <div class="panel stack">
+            <div class="section-title"><h3>Perfil</h3><button id="loadProfileBtn">Cargar perfil</button></div>
+            <div class="field-grid">
+              <div class="field"><label>First Name</label><div class="input-wrap"><input id="profileFirstName" type="text" placeholder="Jose" /></div></div>
+              <div class="field"><label>Last Name</label><div class="input-wrap"><input id="profileLastName" type="text" placeholder="P&eacute;rez" /></div></div>
+            </div>
+            <div class="field"><label>Avatar URL</label><div class="input-wrap"><input id="profileAvatarUrl" type="text" placeholder="https://..." /></div></div>
+            <div class="button-row">
+              <button class="primary-btn" style="width:auto; flex:1;" id="saveProfileBtn">Guardar perfil</button>
+            </div>
+          </div>
+          <div class="panel stack">
+            <div class="section-title"><h3>Configuraci&oacute;n</h3><button id="loadSettingsBtn">Cargar settings</button></div>
+            <div class="field-grid">
+              <div class="field"><label>Currency</label><div class="input-wrap"><select id="settingsCurrency"><option value="DOP">DOP</option><option value="USD">USD</option><option value="EUR">EUR</option></select></div></div>
+              <div class="field"><label>Language</label><div class="input-wrap"><select id="settingsLanguage"><option value="es">es</option><option value="en">en</option></select></div></div>
+            </div>
+            <div class="field"><label>Theme</label><div class="input-wrap"><select id="settingsTheme"><option value="light">light</option><option value="dark">dark</option></select></div></div>
+            <div class="button-row">
+              <button class="primary-btn" style="width:auto; flex:1;" id="saveSettingsBtn">Guardar configuraci&oacute;n</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="debugSection" class="section-view hidden">
+        <div class="module-grid">
+          <div class="panel stack">
+            <div class="section-title"><h3>Sesi&oacute;n / token</h3><button id="loadTokenBtn">Recargar</button></div>
+            <div class="field"><label>Token actual</label><div class="input-wrap"><textarea id="token" rows="8" placeholder="Bearer token guardado"></textarea></div></div>
+            <div class="button-row">
+              <button class="secondary-btn" id="saveTokenBtn">Guardar token manual</button>
+              <button class="secondary-btn" id="clearTokenBtn">Limpiar token</button>
+              <button class="secondary-btn" id="getMeBtn">GET /api/auth/me</button>
+              <button class="secondary-btn" id="getDashboardBtn">GET /api/dashboard</button>
+            </div>
+          </div>
+          <div class="panel stack">
+            <div class="section-title"><h3>Estado actual</h3></div>
+            <div class="status-bar" id="status">Esperando acciones...</div>
+            <div class="section-title"><h3>Respuesta completa</h3></div>
+            <pre id="output"></pre>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const defaultBaseUrl = "http://localhost:3000";
+
+    const state = {
+      currentUser: null,
+      dashboard: null,
+      transactions: [],
+      goals: []
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const currency = (amount, code = "DOP") => new Intl.NumberFormat("es-DO", {
+      style: "currency",
+      currency: code,
+      maximumFractionDigits: 2
+    }).format(Number(amount || 0));
+
+    const formatDate = (value) => {
+      if (!value) return "Sin fecha";
+      return new Date(value).toLocaleDateString("es-DO", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      });
+    };
+
+    function setStatus(message) {
+      $("status").textContent = message;
+    }
+
+    function setOutput(data) {
+      $("output").textContent = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+    }
+
+    function getBaseUrl() {
+      return $("baseUrl").value.trim() || defaultBaseUrl;
+    }
+
+    function getToken() {
+      return $("token").value.trim();
+    }
+
+    function setToken(token) {
+      $("token").value = token || "";
+      localStorage.setItem("fincontrol_token", token || "");
+      updateSessionBadge();
+    }
+
+    function clearToken() {
+      $("token").value = "";
+      localStorage.removeItem("fincontrol_token");
+      updateSessionBadge();
+    }
+
+    function saveBaseUrl() {
+      localStorage.setItem("fincontrol_base_url", getBaseUrl());
+      setStatus("Base URL guardada");
+    }
+
+    function updateSessionBadge() {
+      $("sessionState").textContent = getToken() ? "Sesi&oacute;n activa" : "Sin sesi&oacute;n";
+    }
+
+    function getInitials(name = "?") {
+      return name.split(" ").filter(Boolean).slice(0, 2).map(x => x[0]?.toUpperCase() || "").join("") || "?";
+    }
+
+    function showSection(sectionId) {
+      document.querySelectorAll(".section-view").forEach(el => el.classList.add("hidden"));
+      document.querySelectorAll(".nav-btn").forEach(el => el.classList.remove("active"));
+      document.getElementById(sectionId).classList.remove("hidden");
+      document.querySelector(`[data-section="${sectionId}"]`)?.classList.add("active");
+    }
+
+    function showAuthMode(mode) {
+      $("loginFormWrap").classList.toggle("hidden", mode !== "login");
+      $("registerFormWrap").classList.toggle("hidden", mode !== "register");
+      $("forgotFormWrap").classList.toggle("hidden", mode !== "forgot");
+      $("showLoginBtn").classList.toggle("active", mode === "login");
+      $("showRegisterBtn").classList.toggle("active", mode === "register");
+      $("showForgotBtn").classList.toggle("active", mode === "forgot");
+    }
+
+    async function request(method, path, body = null, token = null) {
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const response = await fetch(`${getBaseUrl()}${path}`, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : null
+      });
+
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        data = { message: "La respuesta no es JSON v&aacute;lido" };
+      }
+
+      const result = { ok: response.ok, status: response.status, data };
+      setOutput(result);
+      return result;
+    }
+
+    function syncUserToHeader(user) {
+      state.currentUser = user || null;
+      $("headerUserName").textContent = user?.name || "Sin usuario";
+      $("headerUserEmail").textContent = user?.email || "No autenticado";
+      $("headerAvatar").textContent = getInitials(user?.name || "?");
+    }
+
+    function renderDashboard(data) {
+      state.dashboard = data;
+      $("greetingText").textContent = data?.header?.greeting || "&iexcl;Bienvenido de nuevo!";
+      $("greetingSubtitle").textContent = data?.header?.subtitle || "Sin resumen todav&iacute;a";
+
+      const summary = data?.summaryCards || {};
+      const curr = summary?.totalBalance?.currency || "DOP";
+
+      $("cardBalance").textContent = currency(summary?.totalBalance?.amount || 0, curr);
+      $("cardBalanceTrend").textContent = `&#8599; ${summary?.totalBalance?.changePercent || 0}% ${summary?.totalBalance?.changeLabel || ""}`;
+
+      $("cardIncome").textContent = currency(summary?.monthlyIncome?.amount || 0, summary?.monthlyIncome?.currency || curr);
+      $("incomeProgressBar").style.width = `${summary?.monthlyIncome?.progressPercent || 0}%`;
+      $("cardIncomeLabel").textContent = `${summary?.monthlyIncome?.progressPercent || 0}% ${summary?.monthlyIncome?.label || ""}`;
+
+      $("cardExpense").textContent = currency(summary?.monthlyExpenses?.amount || 0, summary?.monthlyExpenses?.currency || curr);
+      $("expenseProgressBar").style.width = `${summary?.monthlyExpenses?.budgetUsedPercent || 0}%`;
+      $("cardExpenseLabel").textContent = summary?.monthlyExpenses?.label || "A&uacute;n no hay presupuesto configurado";
+
+      renderRecentTransactions(data?.recentTransactions || []);
+      renderDashboardGoals(data?.goals || []);
+    }
+
+    function renderRecentTransactions(items) {
+      const container = $("recentTransactionsList");
+      if (!items.length) {
+        container.innerHTML = '<div class="sub">A&uacute;n no hay transacciones para mostrar.</div>';
+        return;
+      }
+
+      container.innerHTML = items.map((item, index) => `
+        <div>
+          <div class="transaction-item">
+            <div class="left-group">
+              <div class="round-icon">${mapIcon(item.icon, item.type)}</div>
+              <div>
+                <div class="title">${escapeHtml(item.title)}</div>
+                <div class="sub">${escapeHtml(item.category || "Sin categor&iacute;a")} • ${formatDate(item.transactionDate)}</div>
+              </div>
+            </div>
+            <div class="${item.type === "income" ? "amount-pos" : "amount-neg"}">${item.type === "income" ? "+" : "-"}${currency(item.amount || 0)}</div>
+          </div>
+          ${index < items.length - 1 ? '<div class="divider" style="margin-top:14px;"></div>' : ''}
+        </div>
+      `).join("");
+    }
+
+    function renderDashboardGoals(items) {
+      const container = $("dashboardGoalsList");
+      if (!items.length) {
+        container.innerHTML = '<div class="sub">A&uacute;n no hay metas configuradas.</div>';
+        return;
+      }
+
+      container.innerHTML = items.map((goal) => `
+        <div class="goal-item">
+          <div style="flex:1; min-width:0;">
+            <div class="title">${escapeHtml(goal.title)}</div>
+            <div class="sub">Meta: ${currency(goal.targetAmount || 0)}</div>
+          </div>
+          <div class="goal-right">
+            <div class="title" style="text-align:right;">${goal.progressPercent || 0}%</div>
+            <div class="progress ${goal.color === "green" ? "green" : ""}"><span style="width:${goal.progressPercent || 0}%"></span></div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderTransactions(items) {
+      state.transactions = items;
+      $("transactionsCount").textContent = `${items.length} items`;
+      const container = $("transactionsList");
+      if (!items.length) {
+        container.innerHTML = '<div class="sub">No hay transacciones cargadas.</div>';
+        return;
+      }
+
+      container.innerHTML = items.map((item) => `
+        <div class="list-item panel" style="padding:14px; box-shadow:none;">
+          <div class="left-group">
+            <div class="round-icon">${mapIcon(item.icon, item.type)}</div>
+            <div>
+              <div class="title">${escapeHtml(item.title)}</div>
+              <div class="sub">${escapeHtml(item.category || "Sin categor&iacute;a")} • ${formatDate(item.transactionDate)}</div>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div class="${item.type === "income" ? "amount-pos" : "amount-neg"}">${item.type === "income" ? "+" : "-"}${currency(item.amount || 0)}</div>
+            <div class="button-row" style="justify-content:flex-end; margin-top:8px;">
+              <button class="small-btn" onclick="prefillTransactionForEdit('${item._id || item.id}')">Editar</button>
+              <button class="small-btn" onclick="deleteTransaction('${item._id || item.id}')">Eliminar</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderGoals(items) {
+      state.goals = items;
+      $("goalsCount").textContent = `${items.length} items`;
+      const container = $("goalsList");
+      if (!items.length) {
+        container.innerHTML = '<div class="sub">No hay metas cargadas.</div>';
+        return;
+      }
+
+      container.innerHTML = items.map((goal) => `
+        <div class="panel" style="padding:14px; box-shadow:none;">
+          <div class="goal-item">
+            <div style="flex:1; min-width:0;">
+              <div class="title">${escapeHtml(goal.title)}</div>
+              <div class="sub">Meta: ${currency(goal.targetAmount || 0)} • Actual: ${currency(goal.currentAmount || 0)}</div>
+              <div class="sub">Fecha l&iacute;mite: ${goal.deadline ? formatDate(goal.deadline) : 'No definida'}</div>
+            </div>
+            <div class="goal-right">
+              <div class="title" style="text-align:right;">${goal.progressPercent || 0}%</div>
+              <div class="progress ${goal.color === 'green' ? 'green' : ''}"><span style="width:${goal.progressPercent || 0}%"></span></div>
+              <div class="button-row" style="justify-content:flex-end; margin-top:10px;">
+                <button class="small-btn" onclick="prefillGoalForEdit('${goal._id || goal.id}')">Editar</button>
+                <button class="small-btn" onclick="deleteGoal('${goal._id || goal.id}')">Eliminar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderOverview(data) {
+      const box = $("reportOverviewBox");
+      if (!data) {
+        box.innerHTML = '<div class="sub">Sin datos.</div>';
+        return;
+      }
+      box.innerHTML = `
+        <div class="list-item"><span class="title">Mes/A&ntilde;o</span><span>${data.month}/${data.year}</span></div>
+        <div class="list-item"><span class="title">Total Income</span><span class="amount-pos">${currency(data.totalIncome || 0)}</span></div>
+        <div class="list-item"><span class="title">Total Expenses</span><span class="amount-neg">${currency(data.totalExpenses || 0)}</span></div>
+        <div class="list-item"><span class="title">Balance</span><span class="title">${currency(data.balance || 0)}</span></div>
+      `;
+    }
+
+    function renderIncomeVsExpenses(items) {
+      const box = $("reportIncomeExpenseBox");
+      if (!items?.length) {
+        box.innerHTML = '<div class="sub">Sin datos.</div>';
+        return;
+      }
+      box.innerHTML = items.map(item => `
+        <div class="list-item">
+          <span class="title">Mes ${item.month}</span>
+          <span class="sub">Ing: ${currency(item.income || 0)} | Gas: ${currency(item.expenses || 0)}</span>
+        </div>
+      `).join("");
+    }
+
+    function renderByCategory(items) {
+      const box = $("reportCategoryBox");
+      if (!items?.length) {
+        box.innerHTML = '<div class="sub">Sin datos.</div>';
+        return;
+      }
+      box.innerHTML = items.map(item => `
+        <div class="list-item"><span class="title">${escapeHtml(item.category)}</span><span>${currency(item.amount || 0)}</span></div>
+      `).join("");
+    }
+
+    function mapIcon(icon, type) {
+      const source = (icon || "").toLowerCase();
+      if (source.includes("briefcase")) return "&#128188;";
+      if (source.includes("bag")) return "&#128717;";
+      if (source.includes("zap")) return "&#9889;";
+      if (source.includes("wallet")) return "&#128091;";
+      if (type === "income") return "&#8601;";
+      return "&#8599;";
+    }
+
+    function escapeHtml(value = "") {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    async function register() {
+      if (!$("acceptTerms").checked) {
+        setStatus("Debes aceptar t&eacute;rminos para seguir");
+        return;
+      }
+      setStatus("Registrando usuario...");
+      const body = {
+        name: $("registerName").value.trim(),
+        email: $("registerEmail").value.trim(),
+        password: $("registerPassword").value,
+        confirmPassword: $("registerConfirmPassword").value
+      };
+      const result = await request("POST", "/api/auth/register", body);
+      if (result.ok && result.data?.data?.token) {
+        setToken(result.data.data.token);
+        syncUserToHeader(result.data.data.user);
+        setStatus("Registro exitoso y token guardado");
+        showSection("dashboardSection");
+        await loadDashboard();
+      } else {
+        setStatus(`Registro fall&oacute; con status ${result.status}`);
+      }
+    }
+
+    async function login() {
+      setStatus("Iniciando sesi&oacute;n...");
+      const result = await request("POST", "/api/auth/login", {
+        email: $("loginEmail").value.trim(),
+        password: $("loginPassword").value
+      });
+
+      if (result.ok && result.data?.data?.token) {
+        setToken(result.data.data.token);
+        syncUserToHeader(result.data.data.user);
+        if ($("rememberDevice").checked) {
+          localStorage.setItem("fincontrol_login_email", $("loginEmail").value.trim());
+        }
+        setStatus("Login exitoso");
+        showSection("dashboardSection");
+        await loadDashboard();
+      } else {
+        setStatus(`Login fall&oacute; con status ${result.status}`);
+      }
+    }
+
+    async function forgotPassword() {
+      setStatus("Solicitando token de recuperaci&oacute;n...");
+      const result = await request("POST", "/api/auth/forgot-password", {
+        email: $("forgotEmail").value.trim()
+      });
+      if (result.ok) {
+        const token = result.data?.data?.resetToken || "";
+        if (token) $("resetToken").value = token;
+        setStatus("Solicitud procesada. Si el backend devuelve resetToken, ya qued&oacute; autollenado.");
+      } else {
+        setStatus(`Forgot password fall&oacute; con status ${result.status}`);
+      }
+    }
+
+    async function resetPasswordAction() {
+      setStatus("Restableciendo contrase&ntilde;a...");
+      const result = await request("POST", "/api/auth/reset-password", {
+        token: $("resetToken").value.trim(),
+        password: $("resetPassword").value,
+        confirmPassword: $("resetConfirmPassword").value
+      });
+      setStatus(result.ok ? "Contrase&ntilde;a restablecida" : `Reset fall&oacute; con status ${result.status}`);
+    }
+
+    async function loadMe() {
+      setStatus("Consultando usuario autenticado...");
+      const result = await request("GET", "/api/auth/me", null, getToken());
+      if (result.ok) {
+        syncUserToHeader(result.data?.data?.user);
+        fillProfileFields(result.data?.data?.user);
+        setStatus("Usuario autenticado cargado");
+      } else {
+        setStatus(`GET /api/auth/me fall&oacute; con status ${result.status}`);
+      }
+    }
+
+    async function loadDashboard() {
+      setStatus("Consultando dashboard...");
+      const result = await request("GET", "/api/dashboard", null, getToken());
+      if (result.ok) {
+        renderDashboard(result.data?.data || {});
+        setStatus("Dashboard cargado");
+      } else {
+        setStatus(`GET /api/dashboard fall&oacute; con status ${result.status}`);
+      }
+    }
+
+    async function loadTransactions() {
+      setStatus("Cargando transacciones...");
+      const params = new URLSearchParams();
+      if ($("filterTransactionType").value) params.set("type", $("filterTransactionType").value);
+      if ($("filterTransactionCategory").value.trim()) params.set("category", $("filterTransactionCategory").value.trim());
+      if ($("filterTransactionMonth").value) params.set("month", $("filterTransactionMonth").value);
+      if ($("filterTransactionYear").value) params.set("year", $("filterTransactionYear").value);
+      const query = params.toString() ? `?${params.toString()}` : "";
+      const result = await request("GET", `/api/transactions${query}`, null, getToken());
+      if (result.ok) {
+        renderTransactions(result.data?.data?.items || []);
+        setStatus("Transacciones cargadas");
+      } else {
+        setStatus(`GET /api/transactions fall&oacute; con status ${result.status}`);
+      }
+    }
+
+    async function saveTransaction() {
+      const id = $("transactionId").value.trim();
+      const payload = {
+        title: $("transactionTitle").value.trim(),
+        description: $("transactionDescription").value.trim(),
+        category: $("transactionCategory").value.trim(),
+        type: $("transactionType").value,
+        amount: Number($("transactionAmount").value),
+        transactionDate: $("transactionDate").value ? new Date($("transactionDate").value).toISOString() : undefined,
+        merchant: $("transactionMerchant").value.trim(),
+        icon: $("transactionIcon").value.trim()
+      };
+      const method = id ? "PATCH" : "POST";
+      const path = id ? `/api/transactions/${id}` : "/api/transactions";
+      setStatus(id ? "Actualizando transacci&oacute;n..." : "Creando transacci&oacute;n...");
+      const result = await request(method, path, payload, getToken());
+      if (result.ok) {
+        setStatus(id ? "Transacci&oacute;n actualizada" : "Transacci&oacute;n creada");
+        clearTransactionForm();
+        await loadTransactions();
+        await loadDashboard();
+      } else {
+        setStatus(`Guardar transacci&oacute;n fall&oacute; con status ${result.status}`);
+      }
+    }
+
+    async function deleteTransaction(id) {
+      if (!confirm("&iquest;Eliminar esta transacci&oacute;n?")) return;
+      const result = await request("DELETE", `/api/transactions/${id}`, null, getToken());
+      if (result.ok) {
+        setStatus("Transacci&oacute;n eliminada");
+        await loadTransactions();
+        await loadDashboard();
+      } else {
+        setStatus(`Eliminar transacci&oacute;n fall&oacute; con status ${result.status}`);
+      }
+    }
+
+    window.prefillTransactionForEdit = function(id) {
+      const item = state.transactions.find(x => (x._id || x.id) === id);
+      if (!item) return;
+      $("transactionId").value = item._id || item.id;
+      $("transactionTitle").value = item.title || "";
+      $("transactionDescription").value = item.description || "";
+      $("transactionCategory").value = item.category || "";
+      $("transactionType").value = item.type || "expense";
+      $("transactionAmount").value = item.amount ?? "";
+      $("transactionDate").value = item.transactionDate ? new Date(item.transactionDate).toISOString().slice(0, 10) : "";
+      $("transactionMerchant").value = item.merchant || "";
+      $("transactionIcon").value = item.icon || "";
+      setStatus("Formulario de transacci&oacute;n cargado para edici&oacute;n");
+    }
+
+    function clearTransactionForm() {
+      $("transactionId").value = "";
+      $("transactionTitle").value = "";
+      $("transactionDescription").value = "";
+      $("transactionCategory").value = "";
+      $("transactionType").value = "income";
+      $("transactionAmount").value = "";
+      $("transactionDate").value = "";
+      $("transactionMerchant").value = "";
+      $("transactionIcon").value = "";
+    }
+
+    async function loadGoals() {
+      setStatus("Cargando metas...");
+      const result = await request("GET", "/api/goals", null, getToken());
+      if (result.ok) {
+        renderGoals(result.data?.data?.items || []);
+        setStatus("Metas cargadas");
+      } else {
+        setStatus(`GET /api/goals fall&oacute; con status ${result.status}`);
+      }
+    }
+
+    async function saveGoal() {
+      const id = $("goalId").value.trim();
+      const payload = {
+        title: $("goalTitle").value.trim(),
+        targetAmount: Number($("goalTargetAmount").value),
+        currentAmount: Number($("goalCurrentAmount").value || 0),
+        deadline: $("goalDeadline").value ? new Date($("goalDeadline").value).toISOString() : null,
+        color: $("goalColor").value.trim() || "blue",
+        isCompleted: $("goalCompleted").checked
+      };
+      const method = id ? "PATCH" : "POST";
+      const path = id ? `/api/goals/${id}` : "/api/goals";
+      const result = await request(method, path, payload, getToken());
+      if (result.ok) {
+        setStatus(id ? "Meta actualizada" : "Meta creada");
+        clearGoalForm();
+        await loadGoals();
+        await loadDashboard();
+      } else {
+        setStatus(`Guardar meta fall&oacute; con status ${result.status}`);
+      }
+    }
+
+    async function deleteGoal(id) {
+      if (!confirm("&iquest;Eliminar esta meta?")) return;
+      const result = await request("DELETE", `/api/goals/${id}`, null, getToken());
+      if (result.ok) {
+        setStatus("Meta eliminada");
+        await loadGoals();
+        await loadDashboard();
+      } else {
+        setStatus(`Eliminar meta fall&oacute; con status ${result.status}`);
+      }
+    }
+
+    window.prefillGoalForEdit = function(id) {
+      const goal = state.goals.find(x => (x._id || x.id) === id);
+      if (!goal) return;
+      $("goalId").value = goal._id || goal.id;
+      $("goalTitle").value = goal.title || "";
+      $("goalTargetAmount").value = goal.targetAmount ?? "";
+      $("goalCurrentAmount").value = goal.currentAmount ?? "";
+      $("goalDeadline").value = goal.deadline ? new Date(goal.deadline).toISOString().slice(0, 10) : "";
+      $("goalColor").value = goal.color || "blue";
+      $("goalCompleted").checked = !!goal.isCompleted;
+      setStatus("Formulario de meta cargado para edici&oacute;n");
+    }
+
+    function clearGoalForm() {
+      $("goalId").value = "";
+      $("goalTitle").value = "";
+      $("goalTargetAmount").value = "";
+      $("goalCurrentAmount").value = "";
+      $("goalDeadline").value = "";
+      $("goalColor").value = "blue";
+      $("goalCompleted").checked = false;
+    }
+
+    async function loadOverview() {
+      const { month, year } = getReportFilters();
+      const result = await request("GET", `/api/reports/overview?month=${month}&year=${year}`, null, getToken());
+      if (result.ok) {
+        renderOverview(result.data?.data);
+        setStatus("Overview cargado");
+      } else {
+        setStatus(`Overview fall&oacute; con status ${result.status}`);
+      }
+    }
+
+    async function loadIncomeVsExpenses() {
+      const { year } = getReportFilters();
+      const result = await request("GET", `/api/reports/income-vs-expenses?year=${year}`, null, getToken());
+      if (result.ok) {
+        renderIncomeVsExpenses(result.data?.data?.items || []);
+        setStatus("Income vs expenses cargado");
+      } else {
+        setStatus(`Income vs expenses fall&oacute; con status ${result.status}`);
+      }
+    }
+
+    async function loadByCategory() {
+      const { month, year } = getReportFilters();
+      const result = await request("GET", `/api/reports/by-category?month=${month}&year=${year}`, null, getToken());
+      if (result.ok) {
+        renderByCategory(result.data?.data?.items || []);
+        setStatus("By category cargado");
+      } else {
+        setStatus(`By category fall&oacute; con status ${result.status}`);
+      }
+    }
+
+    async function loadAllReports() {
+      await loadOverview();
+      await loadIncomeVsExpenses();
+      await loadByCategory();
+    }
+
+    function getReportFilters() {
+      const now = new Date();
+      return {
+        month: Number($("reportMonth").value || (now.getMonth() + 1)),
+        year: Number($("reportYear").value || now.getFullYear())
+      };
+    }
+
+    async function loadProfile() {
+      const result = await request("GET", "/api/users/profile", null, getToken());
+      if (result.ok) {
+        fillProfileFields(result.data?.data?.user);
+        setStatus("Perfil cargado");
+      } else {
+        setStatus(`Perfil fall&oacute; con status ${result.status}`);
+      }
+    }
+
+    function fillProfileFields(user) {
+      if (!user) return;
+      $("profileFirstName").value = user.firstName || "";
+      $("profileLastName").value = user.lastName || "";
+      $("profileAvatarUrl").value = user.avatarUrl || "";
+    }
+
+    async function saveProfile() {
+      const result = await request("PATCH", "/api/users/profile", {
+        firstName: $("profileFirstName").value.trim(),
+        lastName: $("profileLastName").value.trim(),
+        avatarUrl: $("profileAvatarUrl").value.trim()
+      }, getToken());
+      if (result.ok) {
+        syncUserToHeader(result.data?.data?.user);
+        setStatus("Perfil actualizado");
+        await loadMe();
+      } else {
+        setStatus(`Guardar perfil fall&oacute; con status ${result.status}`);
+      }
+    }
+
+    async function loadSettings() {
+      const result = await request("GET", "/api/settings", null, getToken());
+      if (result.ok) {
+        const prefs = result.data?.data?.preferences || {};
+        $("settingsCurrency").value = prefs.currency || "DOP";
+        $("settingsLanguage").value = prefs.language || "es";
+        $("settingsTheme").value = prefs.theme || "light";
+        setStatus("Settings cargados");
+      } else {
+        setStatus(`GET /api/settings fall&oacute; con status ${result.status}`);
+      }
+    }
+
+    async function saveSettings() {
+      const result = await request("PATCH", "/api/settings", {
+        currency: $("settingsCurrency").value,
+        language: $("settingsLanguage").value,
+        theme: $("settingsTheme").value
+      }, getToken());
+      if (result.ok) {
+        setStatus("Configuraci&oacute;n actualizada");
+        await loadMe();
+        await loadDashboard();
+      } else {
+        setStatus(`Guardar settings fall&oacute; con status ${result.status}`);
+      }
+    }
+
+    function fillRegisterValid() {
+      const n = Date.now();
+      $("registerName").value = "Juan P&eacute;rez";
+      $("registerEmail").value = `usuario${n}@test.com`;
+      $("registerPassword").value = "123456";
+      $("registerConfirmPassword").value = "123456";
+    }
+
+    function fillRegisterMismatch() {
+      const n = Date.now();
+      $("registerName").value = "Usuario Error";
+      $("registerEmail").value = `error${n}@test.com`;
+      $("registerPassword").value = "123456";
+      $("registerConfirmPassword").value = "654321";
+    }
+
+    function clearRegister() {
+      $("registerName").value = "";
+      $("registerEmail").value = "";
+      $("registerPassword").value = "";
+      $("registerConfirmPassword").value = "";
+    }
+
+    function fillSeedLogin() {
+      $("loginEmail").value = "jose@fincontrol.com";
+      $("loginPassword").value = "123456";
+    }
+
+    function fillInvalidLogin() {
+      $("loginEmail").value = "noexiste@test.com";
+      $("loginPassword").value = "incorrecta";
+    }
+
+    function clearLogin() {
+      $("loginEmail").value = "";
+      $("loginPassword").value = "";
+    }
+
+    function resetTransactionFilters() {
+      $("filterTransactionType").value = "";
+      $("filterTransactionCategory").value = "";
+      $("filterTransactionMonth").value = "";
+      $("filterTransactionYear").value = "";
+    }
+
+    function logout() {
+      clearToken();
+      syncUserToHeader(null);
+      renderDashboard({});
+      renderTransactions([]);
+      renderGoals([]);
+      renderOverview(null);
+      renderIncomeVsExpenses([]);
+      renderByCategory([]);
+      setStatus("Sesi&oacute;n cerrada localmente");
+      setOutput({ success: true, message: "Sesi&oacute;n cerrada localmente" });
+      showSection("authSection");
+    }
+
+    function bindEvents() {
+      document.querySelectorAll(".nav-btn").forEach(btn => btn.addEventListener("click", () => showSection(btn.dataset.section)));
+      $("showLoginBtn").addEventListener("click", () => showAuthMode("login"));
+      $("showRegisterBtn").addEventListener("click", () => showAuthMode("register"));
+      $("showForgotBtn").addEventListener("click", () => showAuthMode("forgot"));
+      $("quickForgotLink").addEventListener("click", () => showAuthMode("forgot"));
+
+      $("saveBaseUrlBtn").addEventListener("click", saveBaseUrl);
+      $("logoutBtn").addEventListener("click", logout);
+
+      $("registerBtn").addEventListener("click", register);
+      $("loginBtn").addEventListener("click", login);
+      $("forgotBtn").addEventListener("click", forgotPassword);
+      $("resetBtn").addEventListener("click", resetPasswordAction);
+
+      $("fillRegisterValidBtn").addEventListener("click", fillRegisterValid);
+      $("fillRegisterMismatchBtn").addEventListener("click", fillRegisterMismatch);
+      $("clearRegisterBtn").addEventListener("click", clearRegister);
+      $("fillSeedLoginBtn").addEventListener("click", fillSeedLogin);
+      $("fillInvalidLoginBtn").addEventListener("click", fillInvalidLogin);
+      $("clearLoginBtn").addEventListener("click", clearLogin);
+
+      $("refreshDashboardBtn").addEventListener("click", loadDashboard);
+      $("refreshGoalsFromDashboardBtn").addEventListener("click", () => { showSection("goalsSection"); loadGoals(); });
+
+      $("loadTransactionsBtn").addEventListener("click", loadTransactions);
+      $("saveTransactionBtn").addEventListener("click", saveTransaction);
+      $("clearTransactionFormBtn").addEventListener("click", clearTransactionForm);
+      $("applyTransactionFiltersBtn").addEventListener("click", loadTransactions);
+      $("resetTransactionFiltersBtn").addEventListener("click", resetTransactionFilters);
+
+      $("loadGoalsBtn").addEventListener("click", loadGoals);
+      $("saveGoalBtn").addEventListener("click", saveGoal);
+      $("clearGoalFormBtn").addEventListener("click", clearGoalForm);
+
+      $("loadReportsBtn").addEventListener("click", loadAllReports);
+      $("loadOverviewBtn").addEventListener("click", loadOverview);
+      $("loadIncomeVsExpensesBtn").addEventListener("click", loadIncomeVsExpenses);
+      $("loadByCategoryBtn").addEventListener("click", loadByCategory);
+
+      $("loadProfileBtn").addEventListener("click", loadProfile);
+      $("saveProfileBtn").addEventListener("click", saveProfile);
+      $("loadSettingsBtn").addEventListener("click", loadSettings);
+      $("saveSettingsBtn").addEventListener("click", saveSettings);
+
+      $("loadTokenBtn").addEventListener("click", () => {
+        $("token").value = localStorage.getItem("fincontrol_token") || "";
+        updateSessionBadge();
+        setStatus("Token recargado desde localStorage");
+      });
+      $("saveTokenBtn").addEventListener("click", () => {
+        setToken(getToken());
+        setStatus("Token guardado manualmente");
+      });
+      $("clearTokenBtn").addEventListener("click", () => {
+        clearToken();
+        setStatus("Token limpiado");
+      });
+      $("getMeBtn").addEventListener("click", loadMe);
+      $("getDashboardBtn").addEventListener("click", loadDashboard);
+    }
+
+    async function bootstrap() {
+      const savedBaseUrl = localStorage.getItem("fincontrol_base_url");
+      const savedToken = localStorage.getItem("fincontrol_token");
+      const savedLoginEmail = localStorage.getItem("fincontrol_login_email");
+
+      $("baseUrl").value = savedBaseUrl || defaultBaseUrl;
+      $("token").value = savedToken || "";
+      if (savedLoginEmail) $("loginEmail").value = savedLoginEmail;
+
+      const now = new Date();
+      $("reportMonth").value = now.getMonth() + 1;
+      $("reportYear").value = now.getFullYear();
+      $("filterTransactionMonth").value = now.getMonth() + 1;
+      $("filterTransactionYear").value = now.getFullYear();
+
+      updateSessionBadge();
+      bindEvents();
+      showAuthMode("login");
+      showSection("authSection");
+      setStatus("HTML de prueba cargado. Si ya tienes token guardado, puedes ir directo al panel.");
+
+      if (savedToken) {
+        await loadMe();
+        await loadDashboard();
+      }
+    }
+
+    bootstrap();
+  </script>
+</body>
+</html>
