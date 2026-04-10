@@ -1,20 +1,34 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import AuthLayout from '../components/AuthLayout';
 import Logo from '../components/Logo';
 import '../Auth.css';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate('/dashboard');
+    setError('');
+    setLoading(true);
+
+    try {
+      await login(email, password);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message || 'Error al iniciar sesión');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const leftContent = (
@@ -54,6 +68,21 @@ const LoginPage = () => {
         Ingresa tus credenciales para acceder a tu libro contable.
       </p>
 
+      {error && (
+        <div style={{
+          background: '#FEF2F2',
+          border: '1px solid #FECACA',
+          borderRadius: '12px',
+          padding: '12px 16px',
+          marginBottom: '16px',
+          color: '#DC2626',
+          fontSize: '14px',
+          fontWeight: '500'
+        }}>
+          {error}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label className="form-label">Correo Electrónico</label>
@@ -65,6 +94,7 @@ const LoginPage = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="form-input"
+              required
             />
           </div>
         </div>
@@ -85,6 +115,7 @@ const LoginPage = () => {
               onChange={(e) => setPassword(e.target.value)}
               className="form-input"
               style={{ fontFamily: 'monospace' }}
+              required
             />
             <button
               type="button"
@@ -108,8 +139,17 @@ const LoginPage = () => {
           </span>
         </label>
 
-        <button type="submit" className="btn-primary" style={{ marginTop: '16px', gap: '8px' }}>
-          Iniciar sesión <ArrowRight size={18} />
+        <button type="submit" className="btn-primary" style={{ marginTop: '16px', gap: '8px' }} disabled={loading}>
+          {loading ? (
+            <>
+              <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
+              Ingresando...
+            </>
+          ) : (
+            <>
+              Iniciar sesión <ArrowRight size={18} />
+            </>
+          )}
         </button>
 
         <div style={{ textAlign: 'center', marginTop: '24px' }}>
@@ -125,6 +165,7 @@ const LoginPage = () => {
           </div>
         </div>
       </form>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 

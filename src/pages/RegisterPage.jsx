@@ -1,23 +1,52 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Lock, Eye, EyeOff, ShieldCheck, BrainCircuit, X } from 'lucide-react';
+import { Lock, Eye, EyeOff, ShieldCheck, BrainCircuit, X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
 import AuthLayout from '../components/AuthLayout';
 import Logo from '../components/Logo';
 import '../Auth.css';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '', terms: false });
 
   const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate('/dashboard');
+    setError('');
+
+    if (!form.terms) {
+      setError('Debes aceptar los Términos de Servicio');
+      return;
+    }
+
+    if (form.password !== form.confirm) {
+      setError('Las contraseñas no coinciden');
+      return;
+    }
+
+    if (form.password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await register(form.name, form.email, form.password, form.confirm);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message || 'Error al crear la cuenta');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const leftContent = (
@@ -62,6 +91,21 @@ const RegisterPage = () => {
         Por favor, ingresa tus datos para comenzar.
       </p>
 
+      {error && (
+        <div style={{
+          background: '#FEF2F2',
+          border: '1px solid #FECACA',
+          borderRadius: '12px',
+          padding: '12px 16px',
+          marginBottom: '16px',
+          color: '#DC2626',
+          fontSize: '14px',
+          fontWeight: '500'
+        }}>
+          {error}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label className="form-label">Nombre Completo</label>
@@ -71,6 +115,7 @@ const RegisterPage = () => {
             value={form.name}
             onChange={(e) => update('name', e.target.value)}
             className="form-input no-icon"
+            required
           />
         </div>
 
@@ -82,6 +127,7 @@ const RegisterPage = () => {
             value={form.email}
             onChange={(e) => update('email', e.target.value)}
             className="form-input no-icon"
+            required
           />
         </div>
 
@@ -97,6 +143,7 @@ const RegisterPage = () => {
                 onChange={(e) => update('password', e.target.value)}
                 className="form-input"
                 style={{ fontFamily: 'monospace' }}
+                required
               />
               <button
                 type="button"
@@ -118,6 +165,7 @@ const RegisterPage = () => {
                 onChange={(e) => update('confirm', e.target.value)}
                 className="form-input"
                 style={{ fontFamily: 'monospace' }}
+                required
               />
               <button
                 type="button"
@@ -142,8 +190,15 @@ const RegisterPage = () => {
           </span>
         </label>
 
-        <button type="submit" className="btn-primary">
-          Crear Cuenta
+        <button type="submit" className="btn-primary" disabled={loading}>
+          {loading ? (
+            <>
+              <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
+              Creando cuenta...
+            </>
+          ) : (
+            'Crear Cuenta'
+          )}
         </button>
 
         <div style={{ textAlign: 'center', marginTop: '24px' }}>
@@ -152,6 +207,7 @@ const RegisterPage = () => {
           </p>
         </div>
       </form>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 

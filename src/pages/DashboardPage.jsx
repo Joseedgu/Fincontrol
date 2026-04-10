@@ -1,54 +1,286 @@
-import { useState } from 'react';
-import { Search, Bell, HelpCircle, LogOut, LayoutGrid, ArrowDownRight, ArrowUpRight, TrendingUp, ChevronRight, Plus, Activity, CreditCard, Coffee, Zap, ShoppingBag, Utensils } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Bell, HelpCircle, LogOut, LayoutGrid, ArrowDownRight, ArrowUpRight, TrendingUp, ChevronRight, Plus, Activity, CreditCard, Coffee, Zap, ShoppingBag, Utensils, Loader2, Wallet } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
+import { dashboardAPI } from '../services/api';
 import Logo from '../components/Logo';
+import TransactionModal from '../components/TransactionModal';
+import GoalModal from '../components/GoalModal';
 import '../Dashboard.css';
 
 const navItems = [
-  { icon: LayoutGrid, label: 'Panel', active: true },
-  { icon: ArrowDownRight, label: 'Ingresos' },
-  { icon: ArrowUpRight, label: 'Gastos' },
-  { icon: Activity, label: 'Reportes' },
-  { icon: LogOut, label: 'Configuración' },
+  { id: 'dashboard', icon: LayoutGrid, label: 'Panel' },
+  { id: 'income', icon: ArrowDownRight, label: 'Ingresos' },
+  { id: 'expenses', icon: ArrowUpRight, label: 'Gastos' },
+  { id: 'reports', icon: Activity, label: 'Reportes' },
+  { id: 'settings', icon: CreditCard, label: 'Configuración' },
 ];
 
-const transactions = [
-  { icon: ShoppingBag, title: 'Apple Store - MacBook Pro', category: 'Tienda', date: '24 Oct, 2026', amount: '-RD$ 2,499.00', type: 'expense' },
-  { icon: ShoppingBag, title: 'Landing page', category: 'Freelance', date: '24 Oct, 2026', amount: '+RD$ 8,500.00', type: 'income' },
-  { icon: Utensils, title: 'Mañon', category: 'Restaurante', date: '23 Oct, 2026', amount: '-RD$ 156.40', type: 'expense' },
-  { icon: Zap, title: 'Edeeste', category: 'Servicios Públicos', date: '22 Oct, 2026', amount: '-RD$ 84.20', type: 'expense' },
-];
+const iconMap = {
+  'shopping-bag': ShoppingBag,
+  'utensils': Utensils,
+  'coffee': Coffee,
+  'zap': Zap,
+  'wallet': Wallet,
+  'credit-card': CreditCard,
+};
 
-const goals = [
-  { title: 'Viaje a Japon', current: 0, target: 115000, progress: 80, color: 'navy' },
-  { title: 'Pago Inicial Casa', current: 0, target: 120000, progress: 45, color: 'navy' },
-  { title: 'Fondo de Emergencia', current: 0, target: 30000, progress: 100, color: 'emerald' },
-];
+const getTransactionIcon = (iconName) => {
+  return iconMap[iconName] || Wallet;
+};
+
+const formatCurrency = (amount, currency = 'DOP') => {
+  const prefix = currency === 'DOP' ? 'RD$' : '$';
+  return `${prefix} ${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+  return `${d.getDate()} ${months[d.getMonth()]}, ${d.getFullYear()}`;
+};
 
 const DashboardPage = () => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  
+  const [currentView, setCurrentView] = useState('dashboard');
+  const [dashData, setDashData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // Modals state
+  const [modalType, setModalType] = useState(null); // 'income', 'expense', 'goal', null
+
+  useEffect(() => {
+    loadDashboard();
+  }, []);
+
+  const loadDashboard = async () => {
+    try {
+      const res = await dashboardAPI.getData();
+      setDashData(res.data);
+    } catch (err) {
+      setError(err.message || 'Error cargando datos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const userName = user?.firstName || user?.name || 'Usuario';
+
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        height: '100vh', width: '100vw', background: 'var(--color-bg)', flexDirection: 'column', gap: '16px'
+      }}>
+        <div style={{
+          width: '40px', height: '40px',
+          border: '3px solid var(--color-input-border)', borderTopColor: 'var(--color-navy)',
+          borderRadius: '50%', animation: 'spin 0.8s linear infinite'
+        }} />
+        <span style={{ color: 'var(--color-text-secondary)', fontSize: '14px', fontWeight: '500' }}>Cargando dashboard...</span>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
+  const summary = dashData?.summaryCards || {};
+  const transactions = dashData?.recentTransactions || [];
+  const goals = dashData?.goals || [];
+  const header = dashData?.header || {};
+
+  const renderContent = () => {
+    if (currentView !== 'dashboard') {
+      return (
+        <div style={{ padding: '48px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+          <Activity size={48} style={{ margin: '0 auto 16px auto', opacity: 0.2 }} />
+          <h2 style={{ fontSize: '24px', color: 'var(--color-navy)', marginBottom: '8px' }}>Módulo en Construcción</h2>
+          <p>La vista de "{navItems.find(n => n.id === currentView)?.label}" estará disponible en la próxima actualización.</p>
+          <button className="btn-primary" style={{ width: 'auto', marginTop: '24px' }} onClick={() => setCurrentView('dashboard')}>
+            Volver al Panel
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        {/* Welcome */}
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="welcome-section">
+          <h1 className="welcome-title">{header.greeting || `¡Bienvenido de nuevo, ${userName}!`}</h1>
+          <p className="welcome-subtitle">
+            {header.subtitle || 'Comienza a registrar tus movimientos para obtener un resumen financiero.'}
+          </p>
+        </motion.div>
+
+        {error && (
+          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', color: '#DC2626', fontSize: '14px' }}>
+            {error}
+          </div>
+        )}
+
+        {/* Stat Cards */}
+        <div className="stats-grid">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="stat-card dark">
+            <div>
+              <h3 className="stat-label-dark">Saldo Total</h3>
+              <div className="stat-value-dark">{formatCurrency(summary.totalBalance?.amount || 0, summary.totalBalance?.currency)}</div>
+            </div>
+            <div className="stat-trend-dark">
+              <TrendingUp size={16} />
+              {summary.totalBalance?.changePercent > 0 ? '+' : ''}{summary.totalBalance?.changePercent || 0}% {summary.totalBalance?.changeLabel || 'desde el mes pasado'}
+            </div>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="stat-card">
+            <div className="stat-header">
+              <div className="stat-icon green"><ArrowDownRight size={24} strokeWidth={2.5} /></div>
+              <button 
+                onClick={() => setModalType('income')}
+                style={{ background: 'none', border: 'none', color: 'var(--color-emerald)', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+              >
+                <Plus size={16} /> Añadir
+              </button>
+            </div>
+            <div>
+              <h3 className="stat-label">Ingresos Mensuales</h3>
+              <div className="stat-value">{formatCurrency(summary.monthlyIncome?.amount || 0, summary.monthlyIncome?.currency)}</div>
+              <div className="progress-track">
+                <div className="progress-fill green" style={{ width: `${summary.monthlyIncome?.progressPercent || 0}%` }}></div>
+              </div>
+              <div className="stat-desc">{summary.monthlyIncome?.progressPercent || 0}% {summary.monthlyIncome?.label || 'de los ingresos mensuales proyectados'}</div>
+            </div>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="stat-card">
+            <div className="stat-header">
+              <div className="stat-icon red"><ArrowUpRight size={24} strokeWidth={2.5} /></div>
+              <button 
+                onClick={() => setModalType('expense')}
+                style={{ background: 'none', border: 'none', color: 'var(--color-danger)', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+              >
+                <Plus size={16} /> Añadir
+              </button>
+            </div>
+            <div>
+              <h3 className="stat-label">Gastos Mensuales</h3>
+              <div className="stat-value">{formatCurrency(summary.monthlyExpenses?.amount || 0, summary.monthlyExpenses?.currency)}</div>
+              <div className="progress-track">
+                <div className="progress-fill red" style={{ width: `${summary.monthlyExpenses?.budgetUsedPercent || 0}%` }}></div>
+              </div>
+              <div className="stat-desc">{summary.monthlyExpenses?.label || 'Aún no hay presupuesto configurado'}</div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Bottom Row */}
+        <div className="bottom-grid">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="panel-card">
+            <div className="panel-header">
+              <h2 className="panel-title">Transacciones Recientes</h2>
+              <button className="panel-action" onClick={() => setCurrentView('reports')}>Ver todo</button>
+            </div>
+            <div className="tx-list">
+              {transactions.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--color-text-muted)' }}>
+                  <Wallet size={32} style={{ margin: '0 auto 8px auto', opacity: 0.4 }} />
+                  <p style={{ fontSize: '14px' }}>No hay transacciones aún</p>
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '16px' }}>
+                    <button onClick={() => setModalType('income')} style={{ padding: '8px 16px', background: 'var(--color-emerald-bg)', color: 'var(--color-emerald)', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>+ Ingreso</button>
+                    <button onClick={() => setModalType('expense')} style={{ padding: '8px 16px', background: 'var(--color-danger-bg)', color: 'var(--color-danger)', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>+ Gasto</button>
+                  </div>
+                </div>
+              ) : (
+                transactions.map((tx, idx) => {
+                  const Icon = getTransactionIcon(tx.icon);
+                  return (
+                    <div key={tx.id || idx} className="tx-item">
+                      <div className="tx-info">
+                        <div className="tx-icon"><Icon size={24} strokeWidth={2} /></div>
+                        <div>
+                          <h4 className="tx-title">{tx.title}</h4>
+                          <p className="tx-desc">{tx.description || tx.category} • {formatDate(tx.transactionDate)}</p>
+                        </div>
+                      </div>
+                      <span className={`tx-amount ${tx.type === 'income' ? 'income' : ''}`}>
+                        {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="panel-card gray" style={{ display: 'flex', flexDirection: 'column' }}>
+            <h2 className="panel-title" style={{ marginBottom: '32px' }}>Metas Futuras</h2>
+            <div className="goals-list">
+              {goals.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--color-text-muted)' }}>
+                  <Plus size={32} style={{ margin: '0 auto 8px auto', opacity: 0.4 }} />
+                  <p style={{ fontSize: '14px' }}>No tienes metas activas</p>
+                  <p style={{ fontSize: '12px', marginTop: '4px' }}>Crea tu primera meta de ahorro</p>
+                </div>
+              ) : (
+                goals.map((goal, idx) => (
+                  <div key={goal.id || idx}>
+                    <div className="goal-header">
+                      <h4 className="goal-title">{goal.title}</h4>
+                      <span className="goal-percent">{goal.progressPercent || 0}%</span>
+                    </div>
+                    <div className="goal-track">
+                      <div
+                        className={`goal-fill ${goal.isCompleted ? 'emerald' : 'navy'}`}
+                        style={{ width: `${goal.progressPercent || 0}%` }}
+                      ></div>
+                    </div>
+                    <p className="goal-meta">
+                      Meta: {formatCurrency(goal.targetAmount)}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+            <button className="btn-secondary" onClick={() => setModalType('goal')}>
+              Crear Nueva Meta
+            </button>
+          </motion.div>
+        </div>
+      </>
+    );
+  };
+
   return (
-    <div className="dashboard-layout app-window">
+    <div className="dashboard-layout">
       {/* ───── Left Sidebar ───── */}
       <aside className="sidebar">
         <div>
-          {/* Logo */}
           <div className="logo-container">
             <Logo variant="dark" />
           </div>
-
-          {/* Navigation */}
           <nav>
-            {navItems.map(({ icon: Icon, label, active }, idx) => (
-              <button key={idx} className={`nav-item ${active ? 'active' : ''}`}>
+            {navItems.map(({ id, icon: Icon, label }) => (
+              <button 
+                key={id} 
+                onClick={() => setCurrentView(id)}
+                className={`nav-item ${currentView === id ? 'active' : ''}`}
+              >
                 <Icon size={20} />
                 {label}
               </button>
             ))}
           </nav>
         </div>
-
-        {/* Logout button at bottom */}
-        <button className="logout-btn">
+        <button className="logout-btn" onClick={handleLogout}>
           <LogOut size={20} />
           Cerrar sesión
         </button>
@@ -56,162 +288,47 @@ const DashboardPage = () => {
 
       {/* ───── Main Content Area ───── */}
       <main className="main-content">
-        {/* Top Header */}
         <header className="header">
-          {/* Search Bar */}
           <div className="search-bar">
             <Search className="search-icon" size={20} />
-            <input 
-              type="text" 
-              placeholder="Buscar transacciones, reportes..." 
-              className="search-input"
-            />
+            <input type="text" placeholder="Buscar transacciones, reportes..." className="search-input" />
           </div>
-
-          {/* Header Right */}
           <div className="header-actions">
             <div style={{ display: 'flex', gap: '16px' }}>
               <button className="icon-btn">
                 <Bell size={24} />
-                <div className="badge"></div>
+                {dashData?.notifications?.unreadCount > 0 && <div className="badge"></div>}
               </button>
               <button className="icon-btn">
                 <HelpCircle size={24} />
               </button>
             </div>
-            
             <div className="divider"></div>
-            
             <div className="user-profile">
               <img src="https://i.pravatar.cc/150?img=11" alt="User Avatar" />
-              <span>Jose</span>
+              <span>{userName}</span>
             </div>
           </div>
         </header>
 
         <div className="dashboard-body">
-          {/* Welcome */}
-          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="welcome-section">
-            <h1 className="welcome-title">¡Bienvenido de nuevo, Jose!</h1>
-            <p className="welcome-subtitle">
-              Tu salud financiera se ve sólida este mes. Has alcanzado el <strong>85%</strong> de tu meta de ahorro.
-            </p>
-          </motion.div>
-
-          {/* Stat Cards */}
-          <div className="stats-grid">
-            {/* Saldo Total */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="stat-card dark">
-              <div>
-                <h3 className="stat-label-dark">Saldo Total</h3>
-                <div className="stat-value-dark">RD$ 124,592.00</div>
-              </div>
-              <div className="stat-trend-dark">
-                <TrendingUp size={16} />
-                +4.2% desde el mes pasado
-              </div>
-            </motion.div>
-
-            {/* Ingresos Mensuales */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="stat-card">
-              <div className="stat-header">
-                <div className="stat-icon green">
-                  <ArrowDownRight size={24} strokeWidth={2.5} />
-                </div>
-                <div className="stat-badge green">Depositado</div>
-              </div>
-              <div>
-                <h3 className="stat-label">Ingresos Mensuales</h3>
-                <div className="stat-value">RD$ 12,450.00</div>
-                <div className="progress-track">
-                  <div className="progress-fill green" style={{ width: '75%' }}></div>
-                </div>
-                <div className="stat-desc">75% de los ingresos mensuales proyectados</div>
-              </div>
-            </motion.div>
-
-            {/* Gastos Mensuales */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="stat-card">
-              <div className="stat-header">
-                <div className="stat-icon red">
-                  <ArrowUpRight size={24} strokeWidth={2.5} />
-                </div>
-                <div className="stat-badge red">Retirado</div>
-              </div>
-              <div>
-                <h3 className="stat-label">Gastos Mensuales</h3>
-                <div className="stat-value">RD$ 4,120.50</div>
-                <div className="progress-track">
-                  <div className="progress-fill red" style={{ width: '35%' }}></div>
-                </div>
-                <div className="stat-desc">Por debajo del presupuesto por RD$ 800.00</div>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Bottom Row */}
-          <div className="bottom-grid">
-            {/* Recent Transactions */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="panel-card">
-              <div className="panel-header">
-                <h2 className="panel-title">Transacciones Recientes</h2>
-                <button className="panel-action">Ver todo</button>
-              </div>
-              
-              <div className="tx-list">
-                {transactions.map((tx, idx) => {
-                  const Icon = tx.icon;
-                  return (
-                  <div key={idx} className="tx-item">
-                    <div className="tx-info">
-                      <div className="tx-icon">
-                        <Icon size={24} strokeWidth={2} />
-                      </div>
-                      <div>
-                        <h4 className="tx-title">{tx.title}</h4>
-                        <p className="tx-desc">{tx.category} • {tx.date}</p>
-                      </div>
-                    </div>
-                    <span className={`tx-amount ${tx.type === 'income' ? 'income' : ''}`}>
-                      {tx.amount}
-                    </span>
-                  </div>
-                )})}
-              </div>
-            </motion.div>
-
-            {/* Future Goals */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="panel-card gray" style={{ display: 'flex', flexDirection: 'column' }}>
-              <h2 className="panel-title" style={{ marginBottom: '32px' }}>Metas Futuras</h2>
-              
-              <div className="goals-list">
-                {goals.map((goal, idx) => (
-                  <div key={idx}>
-                    <div className="goal-header">
-                      <h4 className="goal-title">{goal.title}</h4>
-                      <span className="goal-percent">{goal.progress}%</span>
-                    </div>
-                    <div className="goal-track">
-                      <div 
-                        className={`goal-fill ${goal.color}`}
-                        style={{ width: `${goal.progress}%` }}
-                      ></div>
-                    </div>
-                    <p className="goal-meta">
-                      Meta: RD$ {goal.target.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              <button className="btn-secondary">
-                Crear Nueva Meta
-              </button>
-            </motion.div>
-          </div>
+          {renderContent()}
         </div>
       </main>
 
+      {/* Modals */}
+      <TransactionModal 
+        isOpen={modalType === 'income' || modalType === 'expense'} 
+        type={modalType} 
+        onClose={() => setModalType(null)} 
+        onTransactionAdded={loadDashboard}
+      />
+      
+      <GoalModal 
+        isOpen={modalType === 'goal'} 
+        onClose={() => setModalType(null)} 
+        onGoalAdded={loadDashboard}
+      />
     </div>
   );
 };
