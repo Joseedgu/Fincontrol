@@ -8,6 +8,7 @@ const settingsRoutes = require("./routes/settings.routes");
 const transactionRoutes = require("./routes/transaction.routes");
 const goalRoutes = require("./routes/goal.routes");
 const reportRoutes = require("./routes/report.routes");
+const debtRoutes = require("./routes/debt.routes");
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/goals", goalRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/debts", debtRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

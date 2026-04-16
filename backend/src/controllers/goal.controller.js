@@ -1,22 +1,22 @@
 const { pool } = require("../config/db");
 const { sendSuccess, sendError } = require("../utils/response");
 
+const formatGoal = (goal) => {
+  const targetAmount = Number(goal.target_amount);
+  const currentAmount = Number(goal.current_amount);
+  return {
+    ...goal,
+    targetAmount,
+    currentAmount,
+    progressPercent: targetAmount > 0 ? Math.min(100, Number(((currentAmount / targetAmount) * 100).toFixed(0))) : 0,
+    isCompleted: goal.is_completed,
+  };
+};
+
 const getGoals = async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM goals WHERE user_id = $1 ORDER BY created_at DESC", [req.user.id]);
-
-    const items = result.rows.map((goal) => {
-      const targetAmount = Number(goal.target_amount);
-      const currentAmount = Number(goal.current_amount);
-      return {
-        ...goal,
-        targetAmount,
-        currentAmount,
-        progressPercent: targetAmount > 0 ? Math.min(100, Number(((currentAmount / targetAmount) * 100).toFixed(0))) : 0
-      };
-    });
-
-    return sendSuccess(res, 200, "Metas obtenidas correctamente", { items });
+    return sendSuccess(res, 200, "Metas obtenidas correctamente", { items: result.rows.map(formatGoal) });
   } catch (error) {
     console.error("Error en getGoals:", error);
     return sendError(res, 500, "Error interno del servidor");
@@ -27,14 +27,7 @@ const getGoalById = async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM goals WHERE id = $1 AND user_id = $2", [req.params.id, req.user.id]);
     if (result.rows.length === 0) return sendError(res, 404, "Meta no encontrada");
-
-    const goal = result.rows[0];
-    const targetAmount = Number(goal.target_amount);
-    const currentAmount = Number(goal.current_amount);
-
-    return sendSuccess(res, 200, "Meta obtenida correctamente", {
-      goal: { ...goal, targetAmount, currentAmount, progressPercent: targetAmount > 0 ? Math.min(100, Number(((currentAmount / targetAmount) * 100).toFixed(0))) : 0 }
-    });
+    return sendSuccess(res, 200, "Meta obtenida correctamente", { goal: formatGoal(result.rows[0]) });
   } catch (error) {
     console.error("Error en getGoalById:", error);
     return sendError(res, 500, "Error interno del servidor");
@@ -52,15 +45,34 @@ const createGoal = async (req, res) => {
       [req.user.id, title, targetAmount, currentAmount || 0, deadline || null, color || "blue", Boolean(isCompleted)]
     );
 
-    const goal = result.rows[0];
-    const ta = Number(goal.target_amount);
-    const ca = Number(goal.current_amount);
-
-    return sendSuccess(res, 201, "Meta creada correctamente", {
-      goal: { ...goal, targetAmount: ta, currentAmount: ca, progressPercent: ta > 0 ? Math.min(100, Number(((ca / ta) * 100).toFixed(0))) : 0 }
-    });
+    return sendSuccess(res, 201, "Meta creada correctamente", { goal: formatGoal(result.rows[0]) });
   } catch (error) {
     console.error("Error en createGoal:", error);
+    return sendError(res, 500, "Error interno del servidor");
+  }
+};
+
+// NEW: Add funds to a goal
+const addFunds = async (req, res) => {
+  try {
+    const { amount } = req.body;
+    if (!amount || amount <= 0) return sendError(res, 400, "El monto debe ser mayor a 0");
+
+    const existing = await pool.query("SELECT * FROM goals WHERE id = $1 AND user_id = $2", [req.params.id, req.user.id]);
+    if (existing.rows.length === 0) return sendError(res, 404, "Meta no encontrada");
+
+    const goal = existing.rows[0];
+    const newAmount = Number(goal.current_amount) + Number(amount);
+    const isNowCompleted = newAmount >= Number(goal.target_amount);
+
+    const result = await pool.query(
+      `UPDATE goals SET current_amount = $1, is_completed = $2, updated_at = NOW() WHERE id = $3 AND user_id = $4 RETURNING *`,
+      [newAmount, isNowCompleted, req.params.id, req.user.id]
+    );
+
+    return sendSuccess(res, 200, "Fondos agregados correctamente", { goal: formatGoal(result.rows[0]) });
+  } catch (error) {
+    console.error("Error en addFunds:", error);
     return sendError(res, 500, "Error interno del servidor");
   }
 };
@@ -91,13 +103,7 @@ const updateGoal = async (req, res) => {
       values
     );
 
-    const goal = result.rows[0];
-    const ta = Number(goal.target_amount);
-    const ca = Number(goal.current_amount);
-
-    return sendSuccess(res, 200, "Meta actualizada correctamente", {
-      goal: { ...goal, targetAmount: ta, currentAmount: ca, progressPercent: ta > 0 ? Math.min(100, Number(((ca / ta) * 100).toFixed(0))) : 0 }
-    });
+    return sendSuccess(res, 200, "Meta actualizada correctamente", { goal: formatGoal(result.rows[0]) });
   } catch (error) {
     console.error("Error en updateGoal:", error);
     return sendError(res, 500, "Error interno del servidor");
@@ -115,4 +121,4 @@ const deleteGoal = async (req, res) => {
   }
 };
 
-module.exports = { getGoals, getGoalById, createGoal, updateGoal, deleteGoal };
+module.exports = { getGoals, getGoalById, createGoal, updateGoal, deleteGoal, addFunds };

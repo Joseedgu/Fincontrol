@@ -63,6 +63,19 @@ const createTables = async () => {
       updated_at TIMESTAMP DEFAULT NOW(),
       UNIQUE(user_id, month, year)
     );
+
+    CREATE TABLE IF NOT EXISTS debts (
+      id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      person_name VARCHAR(255) NOT NULL,
+      amount DECIMAL(12,2) NOT NULL CHECK (amount >= 0),
+      paid_amount DECIMAL(12,2) DEFAULT 0 CHECK (paid_amount >= 0),
+      type VARCHAR(20) NOT NULL CHECK (type IN ('i_owe', 'they_owe')),
+      description TEXT DEFAULT '',
+      due_date DATE,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    );
   `;
 
   try {

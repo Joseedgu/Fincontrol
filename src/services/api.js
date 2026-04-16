@@ -79,6 +79,14 @@ export const goalsAPI = {
   create: (data) => api('/api/goals', { method: 'POST', body: JSON.stringify(data) }),
   update: (id, data) => api(`/api/goals/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   delete: (id) => api(`/api/goals/${id}`, { method: 'DELETE' }),
+  addFunds: (id, amount) => api(`/api/goals/${id}/fund`, { method: 'PATCH', body: JSON.stringify({ amount }) }),
+};
+
+export const debtsAPI = {
+  getAll: () => api('/api/debts'),
+  create: (data) => api('/api/debts', { method: 'POST', body: JSON.stringify(data) }),
+  pay: (id, amount) => api(`/api/debts/${id}/pay`, { method: 'PATCH', body: JSON.stringify({ amount }) }),
+  delete: (id) => api(`/api/debts/${id}`, { method: 'DELETE' }),
 };
 
 export const reportsAPI = {
