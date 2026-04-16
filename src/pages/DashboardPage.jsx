@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Bell, HelpCircle, LogOut, LayoutGrid, TrendingUp, Plus, Activity, Settings, Coffee, Zap, ShoppingBag, Utensils, Wallet, CreditCard, Trash2, ChevronLeft, ChevronRight, Save, User, Globe, Palette, Loader2, Target, ArrowDownRight, ArrowUpRight, DollarSign, Users, X } from 'lucide-react';
+import { Search, Bell, HelpCircle, LogOut, LayoutGrid, TrendingUp, Plus, Activity, Settings, Coffee, Zap, ShoppingBag, Utensils, Wallet, CreditCard, Trash2, ChevronLeft, ChevronRight, Save, User, Globe, Palette, Loader2, Target, ArrowDownRight, ArrowUpRight, DollarSign, Users, X, Menu, ChevronLeftCircle, ChevronRightCircle, Edit3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { dashboardAPI, transactionsAPI, reportsAPI, settingsAPI, goalsAPI, debtsAPI } from '../services/api';
+import { dashboardAPI, transactionsAPI, reportsAPI, settingsAPI, goalsAPI, debtsAPI, userAPI } from '../services/api';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import Logo from '../components/Logo';
 import TransactionModal from '../components/TransactionModal';
@@ -374,14 +374,14 @@ const DebtsView = () => {
 
     return (
       <motion.div key={debt.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.03 }}
-        style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', borderBottom: idx < arr.length - 1 ? '1px solid var(--color-border)' : 'none' }}
+        style={{ display: 'flex', alignItems: 'center', gap: '18px', padding: '18px 22px', borderBottom: idx < arr.length - 1 ? '1px solid var(--color-border)' : 'none' }}
         className="goal-row"
       >
-        <UserAvatar name={debt.personName} size={36} />
+        <UserAvatar name={debt.personName} size={42} />
 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-            <h4 style={{ fontWeight: 700, fontSize: '14px', color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{debt.personName}</h4>
+            <h4 style={{ fontWeight: 700, fontSize: '15px', color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{debt.personName}</h4>
             <span style={{ fontSize: '10px', fontWeight: 700, padding: '1px 8px', borderRadius: '4px', flexShrink: 0, background: isMeDeben ? 'var(--color-emerald-bg)' : 'var(--color-danger-bg)', color: accent }}>{isMeDeben ? 'Me debe' : 'Debo'}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -394,22 +394,22 @@ const DebtsView = () => {
         </div>
 
         <div style={{ textAlign: 'right', flexShrink: 0, minWidth: '100px' }}>
-          <p style={{ fontSize: '13px', fontWeight: 700, color: accent, fontFamily: 'monospace' }}>{isMeDeben ? '+' : '-'}{formatCurrency(remaining, currency)}</p>
-          <p style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>de {formatCurrency(debt.amount, currency)}</p>
+          <p style={{ fontSize: '14px', fontWeight: 700, color: accent, fontFamily: 'monospace' }}>{isMeDeben ? '+' : '-'}{formatCurrency(remaining, currency)}</p>
+          <p style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>de {formatCurrency(debt.amount, currency)}</p>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
           <button
             onClick={() => { setPayModal(debt); setPayAmount(''); }}
             title={isMeDeben ? 'Recibir pago' : 'Abonar'}
-            style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', background: `${accent}15`, color: accent, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+            style={{ width: '34px', height: '34px', borderRadius: '8px', border: 'none', background: `${accent}15`, color: accent, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
             onMouseEnter={e => { e.currentTarget.style.background = `${accent}30`; }}
             onMouseLeave={e => { e.currentTarget.style.background = `${accent}15`; }}
           >
             <DollarSign size={15} strokeWidth={2.5} />
           </button>
           <button onClick={() => handleDelete(debt.id)} title="Eliminar"
-            style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', background: 'transparent', color: 'var(--color-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
+            style={{ width: '34px', height: '34px', borderRadius: '8px', border: 'none', background: 'transparent', color: 'var(--color-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-danger-bg)'; e.currentTarget.style.color = 'var(--color-danger)'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-text-muted)'; }}
           >
@@ -600,7 +600,7 @@ const ReportsView = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600 }}><div style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#DC2626' }}></div> Gastos</div>
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
         <div className="panel-card">
           <h3 className="panel-title" style={{ marginBottom: '16px', fontSize: '18px' }}>Distribución por Categoría</h3>
           {pieData.length === 0 ? (<p style={{ color: 'var(--color-text-muted)', fontSize: '14px', textAlign: 'center', padding: '40px 0' }}>Sin datos para este mes</p>) : (<>
@@ -639,6 +639,9 @@ const SettingsView = () => {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
   const [prefs, setPrefs] = useState({ currency: 'DOP', language: 'es', theme: 'light' });
+  const [editingName, setEditingName] = useState(false);
+  const [newName, setNewName] = useState(user?.name || user?.firstName || '');
+  const [savingName, setSavingName] = useState(false);
 
   useEffect(() => { loadSettings(); }, []);
 
@@ -660,22 +663,59 @@ const SettingsView = () => {
     finally { setSaving(false); }
   };
 
+  const handleNameSave = async () => {
+    if (!newName.trim()) return;
+    setSavingName(true);
+    try {
+      await userAPI.updateProfile({ firstName: newName.trim() });
+      setEditingName(false);
+      setSuccess(currentLang === 'en' ? 'Name updated successfully' : 'Nombre actualizado correctamente');
+      setTimeout(() => setSuccess(''), 3000);
+      window.location.reload();
+    } catch (err) { console.error(err); }
+    finally { setSavingName(false); }
+  };
+
   if (loading) return <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--color-text-muted)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} /><p>Cargando configuración...</p><style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style></div>;
 
   return (
     <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}>
-      <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-navy)', marginBottom: '32px' }}>Configuración</h1>
+      <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-navy)', marginBottom: '32px' }}>{t.settingsTitle}</h1>
       {success && (<div style={{ background: 'rgba(0,196,140,0.1)', border: '1px solid var(--color-emerald)', borderRadius: '12px', padding: '12px 16px', marginBottom: '24px', color: 'var(--color-emerald)', fontWeight: 600, fontSize: '14px' }}>✓ {success}</div>)}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
         <div className="panel-card">
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
             <UserAvatar name={user?.name || user?.firstName || 'U'} size={56} />
-            <div>
-              <h3 style={{ fontWeight: 700, color: 'var(--color-text-primary)' }}>{user?.name || user?.firstName || 'Usuario'}</h3>
+            <div style={{ flex: 1 }}>
+              {editingName ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input type="text" value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleNameSave()}
+                    style={{ flex: 1, padding: '8px 12px', borderRadius: '8px', border: '2px solid var(--color-navy)', fontSize: '15px', fontWeight: 700, outline: 'none', color: 'var(--color-text-primary)' }}
+                    autoFocus />
+                  <button onClick={handleNameSave} disabled={savingName}
+                    style={{ padding: '8px 14px', background: 'var(--color-navy)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>
+                    {savingName ? '...' : '✓'}
+                  </button>
+                  <button onClick={() => { setEditingName(false); setNewName(user?.name || user?.firstName || ''); }}
+                    style={{ padding: '8px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
+                    <X size={16} />
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h3 style={{ fontWeight: 700, color: 'var(--color-text-primary)' }}>{user?.name || user?.firstName || 'Usuario'}</h3>
+                  <button onClick={() => setEditingName(true)} title={currentLang === 'en' ? 'Edit name' : 'Editar nombre'}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: '4px', borderRadius: '6px', transition: 'all 0.15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-input-bg)'; e.currentTarget.style.color = 'var(--color-navy)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--color-text-muted)'; }}>
+                    <Edit3 size={14} />
+                  </button>
+                </div>
+              )}
               <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>{user?.email || ''}</p>
             </div>
           </div>
-          <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', lineHeight: '1.6' }}>Tu perfil está vinculado a tu correo electrónico.</p>
+          <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', lineHeight: '1.6' }}>{t.profile}</p>
         </div>
         <div className="panel-card">
           <h3 style={{ fontWeight: 700, marginBottom: '20px', color: 'var(--color-text-primary)' }}>{t.preferences}</h3>
@@ -702,6 +742,9 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [modalType, setModalType] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => { loadDashboard(); }, []);
 
@@ -802,27 +845,52 @@ const DashboardPage = () => {
 
   return (
     <div className="dashboard-layout">
-      <aside className="sidebar">
+      {/* Mobile overlay */}
+      <div className={`mobile-overlay ${mobileMenuOpen ? 'show' : ''}`} onClick={() => setMobileMenuOpen(false)} />
+
+      <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''} ${mobileMenuOpen ? 'mobile-open' : ''}`} style={{ position: 'relative' }}>
         <div>
           <div className="logo-container"><Logo variant="dark" /></div>
           <nav>
             {navItems.map(({ id, icon: Icon, labelKey }) => (
-              <button key={id} onClick={() => setCurrentView(id)} className={`nav-item ${currentView === id ? 'active' : ''}`}><Icon size={20} />{t[labelKey]}</button>
+              <button key={id} onClick={() => { setCurrentView(id); setMobileMenuOpen(false); }} className={`nav-item ${currentView === id ? 'active' : ''}`}><Icon size={20} /><span className="nav-label">{t[labelKey]}</span></button>
             ))}
           </nav>
         </div>
-        <button className="logout-btn" onClick={handleLogout}><LogOut size={20} />{t.logout}</button>
+        <button className="logout-btn" onClick={handleLogout}><LogOut size={20} /><span className="logout-label">{t.logout}</span></button>
+        {/* Toggle button (desktop only) */}
+        <button className="sidebar-toggle" onClick={() => setSidebarCollapsed(c => !c)} title={sidebarCollapsed ? 'Expandir' : 'Contraer'}>
+          {sidebarCollapsed ? <ChevronRight size={14} strokeWidth={2.5} /> : <ChevronLeft size={14} strokeWidth={2.5} />}
+        </button>
       </aside>
       <main className="main-content">
         <header className="header">
+          <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(true)}><Menu size={24} /></button>
           <div className="search-bar"><Search className="search-icon" size={20} /><input type="text" placeholder={t.search} className="search-input" /></div>
           <div className="header-actions">
-            <div style={{ display: 'flex', gap: '16px' }}>
-              <button className="icon-btn"><Bell size={24} />{dashData?.notifications?.unreadCount > 0 && <div className="badge"></div>}</button>
+            <div style={{ display: 'flex', gap: '16px', position: 'relative' }}>
+              <button className="icon-btn" onClick={() => setShowNotifications(n => !n)}>
+                <Bell size={24} />
+                {dashData?.notifications?.unreadCount > 0 && <div className="badge"></div>}
+              </button>
               <button className="icon-btn"><HelpCircle size={24} /></button>
+              {/* Notification popup */}
+              {showNotifications && (
+                <div className="notification-popup">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <h4 style={{ fontWeight: 700, fontSize: '15px', color: 'var(--color-navy)' }}>{language === 'en' ? 'Notifications' : 'Notificaciones'}</h4>
+                    <button onClick={() => setShowNotifications(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: '4px' }}><X size={16} /></button>
+                  </div>
+                  <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                    <Bell size={32} style={{ margin: '0 auto 10px', opacity: 0.2, color: 'var(--color-navy)' }} />
+                    <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text-secondary)' }}>{language === 'en' ? 'You\'re all caught up!' : '¡Estás al día!'}</p>
+                    <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px' }}>{language === 'en' ? 'No new notifications' : 'No tienes notificaciones nuevas'}</p>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="divider"></div>
-            <div className="user-profile">
+            <div className="user-profile" onClick={() => { setCurrentView('settings'); setMobileMenuOpen(false); }}>
               <UserAvatar name={userName} size={36} />
               <span>{userName}</span>
             </div>
