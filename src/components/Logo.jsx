@@ -20,7 +20,7 @@ const Logo = ({ variant = 'light', size = 'md' }) => {
           fill={iconColor}
         />
       </svg>
-      <span style={{ fontWeight: 800, letterSpacing: '-0.02em', fontSize, color: textColor }}>
+      <span className="logo-text" style={{ fontWeight: 800, letterSpacing: '-0.02em', fontSize, color: textColor }}>
         FinControl
       </span>
     </div>
