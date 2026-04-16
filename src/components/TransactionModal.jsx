@@ -7,23 +7,31 @@ const TransactionModal = ({ isOpen, onClose, type, onTransactionAdded }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const [form, setForm] = useState({
+  const defaultForm = {
     title: '',
     amount: '',
     category: '',
     description: '',
-    transaction_date: new Date().toISOString().split('T')[0],
-  });
+    transactionDate: new Date().toISOString().split('T')[0],
+  };
+
+  const [form, setForm] = useState(defaultForm);
 
   if (!isOpen) return null;
 
   const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
+  const resetAndClose = () => {
+    setForm(defaultForm);
+    setError('');
+    onClose();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     
-    if (!form.title || !form.amount || !form.category || !form.transaction_date) {
+    if (!form.title || !form.amount || !form.category || !form.transactionDate) {
       setError('Por favor completa los campos obligatorios');
       return;
     }
@@ -31,11 +39,15 @@ const TransactionModal = ({ isOpen, onClose, type, onTransactionAdded }) => {
     setLoading(true);
     try {
       await transactionsAPI.create({
-        ...form,
-        type: type, // 'income' or 'expense'
-        amount: Number(form.amount)
+        title: form.title,
+        description: form.description,
+        category: form.category,
+        type: type,
+        amount: Number(form.amount),
+        transactionDate: form.transactionDate,
       });
       onTransactionAdded();
+      setForm(defaultForm);
       onClose();
     } catch (err) {
       setError(err.message || 'Error al guardar la transacción');
@@ -48,14 +60,15 @@ const TransactionModal = ({ isOpen, onClose, type, onTransactionAdded }) => {
 
   return (
     <AnimatePresence>
-      <div className="modal-overlay">
+      <div className="modal-overlay" onClick={resetAndClose}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
           className="modal-content"
+          onClick={(e) => e.stopPropagation()}
         >
-          <button onClick={onClose} className="modal-close"><X size={24} /></button>
+          <button onClick={resetAndClose} className="modal-close"><X size={24} /></button>
           
           <h2 className="modal-title">
             {isIncome ? 'Nuevo Ingreso' : 'Nuevo Gasto'}
@@ -80,7 +93,7 @@ const TransactionModal = ({ isOpen, onClose, type, onTransactionAdded }) => {
               />
             </div>
 
-            <div className="flex" style={{ gap: '16px' }}>
+            <div style={{ display: 'flex', gap: '16px' }}>
               <div className="form-group" style={{ flex: 1 }}>
                 <label className="form-label">Monto (RD$) *</label>
                 <div className="input-wrapper">
@@ -104,8 +117,8 @@ const TransactionModal = ({ isOpen, onClose, type, onTransactionAdded }) => {
                   <Calendar className="input-icon" />
                   <input
                     type="date"
-                    value={form.transaction_date}
-                    onChange={(e) => update('transaction_date', e.target.value)}
+                    value={form.transactionDate}
+                    onChange={(e) => update('transactionDate', e.target.value)}
                     className="form-input"
                     required
                   />

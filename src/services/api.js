@@ -1,7 +1,19 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
+const getToken = () => {
+  return localStorage.getItem('fincontrol_token') || sessionStorage.getItem('fincontrol_token');
+};
+
+const clearAuth = () => {
+  localStorage.removeItem('fincontrol_token');
+  localStorage.removeItem('fincontrol_user');
+  localStorage.removeItem('fincontrol_persist');
+  sessionStorage.removeItem('fincontrol_token');
+  sessionStorage.removeItem('fincontrol_user');
+};
+
 const api = async (endpoint, options = {}) => {
-  const token = localStorage.getItem('fincontrol_token');
+  const token = getToken();
 
   const headers = {
     'Content-Type': 'application/json',
@@ -21,8 +33,7 @@ const api = async (endpoint, options = {}) => {
 
   if (!response.ok) {
     if (response.status === 401) {
-      localStorage.removeItem('fincontrol_token');
-      localStorage.removeItem('fincontrol_user');
+      clearAuth();
       if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
         window.location.href = '/login';
       }
@@ -68,6 +79,31 @@ export const goalsAPI = {
   create: (data) => api('/api/goals', { method: 'POST', body: JSON.stringify(data) }),
   update: (id, data) => api(`/api/goals/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   delete: (id) => api(`/api/goals/${id}`, { method: 'DELETE' }),
+};
+
+export const reportsAPI = {
+  getOverview: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return api(`/api/reports/overview${query ? `?${query}` : ''}`);
+  },
+  getIncomeVsExpenses: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return api(`/api/reports/income-vs-expenses${query ? `?${query}` : ''}`);
+  },
+  getByCategory: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return api(`/api/reports/by-category${query ? `?${query}` : ''}`);
+  },
+};
+
+export const settingsAPI = {
+  get: () => api('/api/settings'),
+  update: (data) => api('/api/settings', { method: 'PATCH', body: JSON.stringify(data) }),
+};
+
+export const userAPI = {
+  getProfile: () => api('/api/users/profile'),
+  updateProfile: (data) => api('/api/users/profile', { method: 'PATCH', body: JSON.stringify(data) }),
 };
 
 export default api;

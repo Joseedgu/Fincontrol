@@ -9,8 +9,31 @@ export const useAuth = () => {
   return ctx;
 };
 
+const getStorage = () => {
+  // If user chose "remember", use localStorage; otherwise sessionStorage
+  return localStorage.getItem('fincontrol_persist') === 'true' ? localStorage : sessionStorage;
+};
+
+const getToken = () => {
+  return localStorage.getItem('fincontrol_token') || sessionStorage.getItem('fincontrol_token');
+};
+
+const getUser = () => {
+  const raw = localStorage.getItem('fincontrol_user') || sessionStorage.getItem('fincontrol_user');
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+};
+
+const clearAll = () => {
+  localStorage.removeItem('fincontrol_token');
+  localStorage.removeItem('fincontrol_user');
+  localStorage.removeItem('fincontrol_persist');
+  sessionStorage.removeItem('fincontrol_token');
+  sessionStorage.removeItem('fincontrol_user');
+};
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => getUser());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,7 +41,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAuth = async () => {
-    const token = localStorage.getItem('fincontrol_token');
+    const token = getToken();
     if (!token) {
       setLoading(false);
       return;
@@ -28,19 +51,28 @@ export const AuthProvider = ({ children }) => {
       const res = await authAPI.me();
       setUser(res.data.user);
     } catch {
-      localStorage.removeItem('fincontrol_token');
-      localStorage.removeItem('fincontrol_user');
+      clearAll();
       setUser(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const login = async (email, password) => {
+  const login = async (email, password, rememberMe = false) => {
     const res = await authAPI.login(email, password);
     const { user: userData, token } = res.data;
-    localStorage.setItem('fincontrol_token', token);
-    localStorage.setItem('fincontrol_user', JSON.stringify(userData));
+
+    // Choose where to store
+    if (rememberMe) {
+      localStorage.setItem('fincontrol_persist', 'true');
+      localStorage.setItem('fincontrol_token', token);
+      localStorage.setItem('fincontrol_user', JSON.stringify(userData));
+    } else {
+      localStorage.removeItem('fincontrol_persist');
+      sessionStorage.setItem('fincontrol_token', token);
+      sessionStorage.setItem('fincontrol_user', JSON.stringify(userData));
+    }
+
     setUser(userData);
     return userData;
   };
@@ -48,6 +80,8 @@ export const AuthProvider = ({ children }) => {
   const register = async (name, email, password, confirmPassword) => {
     const res = await authAPI.register(name, email, password, confirmPassword);
     const { user: userData, token } = res.data;
+    // New registrations auto-persist
+    localStorage.setItem('fincontrol_persist', 'true');
     localStorage.setItem('fincontrol_token', token);
     localStorage.setItem('fincontrol_user', JSON.stringify(userData));
     setUser(userData);
@@ -55,8 +89,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('fincontrol_token');
-    localStorage.removeItem('fincontrol_user');
+    clearAll();
     setUser(null);
   };
 

@@ -22,7 +22,7 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      await login(email, password);
+      await login(email, password, remember);
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Error al iniciar sesión');

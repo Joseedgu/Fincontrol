@@ -9,7 +9,7 @@ const GoalModal = ({ isOpen, onClose, onGoalAdded }) => {
   
   const [form, setForm] = useState({
     title: '',
-    target_amount: '',
+    targetAmount: '',
     deadline: '',
   });
 
@@ -17,22 +17,30 @@ const GoalModal = ({ isOpen, onClose, onGoalAdded }) => {
 
   const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
+  const resetAndClose = () => {
+    setForm({ title: '', targetAmount: '', deadline: '' });
+    setError('');
+    onClose();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     
-    if (!form.title || !form.target_amount) {
-      setError('Por favor completa los campos obligatorios');
+    if (!form.title || !form.targetAmount) {
+      setError('El título y el monto objetivo son obligatorios');
       return;
     }
 
     setLoading(true);
     try {
       await goalsAPI.create({
-        ...form,
-        target_amount: Number(form.target_amount)
+        title: form.title,
+        targetAmount: Number(form.targetAmount),
+        deadline: form.deadline || null,
       });
       onGoalAdded();
+      setForm({ title: '', targetAmount: '', deadline: '' });
       onClose();
     } catch (err) {
       setError(err.message || 'Error al guardar la meta');
@@ -43,14 +51,15 @@ const GoalModal = ({ isOpen, onClose, onGoalAdded }) => {
 
   return (
     <AnimatePresence>
-      <div className="modal-overlay">
+      <div className="modal-overlay" onClick={resetAndClose}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
           className="modal-content"
+          onClick={(e) => e.stopPropagation()}
         >
-          <button onClick={onClose} className="modal-close"><X size={24} /></button>
+          <button onClick={resetAndClose} className="modal-close"><X size={24} /></button>
           
           <h2 className="modal-title">Crear Nueva Meta</h2>
 
@@ -85,8 +94,8 @@ const GoalModal = ({ isOpen, onClose, onGoalAdded }) => {
                   step="0.01"
                   min="0"
                   placeholder="0.00"
-                  value={form.target_amount}
-                  onChange={(e) => update('target_amount', e.target.value)}
+                  value={form.targetAmount}
+                  onChange={(e) => update('targetAmount', e.target.value)}
                   className="form-input"
                   required
                 />
