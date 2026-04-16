@@ -24,8 +24,9 @@ const iconMap = {
 };
 const getTransactionIcon = (iconName) => iconMap[iconName] || Wallet;
 
-const formatCurrency = (amount, currency = 'DOP') => {
-  const prefix = currency === 'DOP' ? 'RD$' : '$';
+const CURRENCY_SYMBOLS = { DOP: 'RD$', USD: '$', EUR: '€' };
+const formatCurrency = (amount, cur) => {
+  const prefix = CURRENCY_SYMBOLS[cur] || 'RD$';
   return `${prefix} ${Number(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
@@ -60,10 +61,11 @@ const UserAvatar = ({ name, size = 36 }) => {
 const GOAL_COLORS = ['#042B49', '#00C48C', '#6366F1', '#F59E0B', '#EC4899', '#00C6FF', '#8B5CF6', '#DC2626'];
 
 const GoalsView = () => {
+  const { currency } = useAuth();
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
-  const [fundModal, setFundModal] = useState(null); // goal object or null
+  const [fundModal, setFundModal] = useState(null);
   const [fundAmount, setFundAmount] = useState('');
   const [fundLoading, setFundLoading] = useState(false);
   const [createForm, setCreateForm] = useState({ title: '', targetAmount: '', deadline: '' });
@@ -109,6 +111,7 @@ const GoalsView = () => {
     try { await goalsAPI.delete(id); loadGoals(); } catch (err) { console.error(err); }
   };
 
+  const fmt = (v) => formatCurrency(v, currency);
   const totalSaved = goals.reduce((s, g) => s + (g.currentAmount || 0), 0);
   const totalTarget = goals.reduce((s, g) => s + (g.targetAmount || 0), 0);
 
@@ -116,49 +119,58 @@ const GoalsView = () => {
 
   return (
     <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
           <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-navy)', marginBottom: '4px' }}>Metas de Ahorro</h1>
-          <p style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>
-            Ahorrado: {formatCurrency(totalSaved)} de {formatCurrency(totalTarget)}
-          </p>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>Ahorrado: {fmt(totalSaved)} de {fmt(totalTarget)}</p>
         </div>
-        <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', background: 'var(--color-navy)', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 700, cursor: 'pointer', fontSize: '14px' }}>
-          <Plus size={18} /> Nueva Meta
+        <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: 'var(--color-navy)', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 700, cursor: 'pointer', fontSize: '13px' }}>
+          <Plus size={16} /> Nueva Meta
         </button>
       </div>
 
       {goals.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--color-text-muted)' }}>
-          <Target size={48} style={{ margin: '0 auto 16px', opacity: 0.3 }} />
-          <p style={{ fontSize: '16px', fontWeight: 600 }}>No tienes metas activas</p>
-          <p style={{ fontSize: '13px', marginTop: '8px' }}>Crea tu primera meta de ahorro para comenzar.</p>
+        <div style={{ textAlign: 'center', padding: '64px 0', color: 'var(--color-text-muted)' }}>
+          <Target size={42} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
+          <p style={{ fontSize: '15px', fontWeight: 600 }}>No tienes metas activas</p>
+          <p style={{ fontSize: '13px', marginTop: '6px' }}>Crea tu primera meta de ahorro para comenzar.</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
           {goals.map((goal, i) => {
             const color = GOAL_COLORS[i % GOAL_COLORS.length];
             const remaining = Math.max(0, goal.targetAmount - goal.currentAmount);
             return (
-              <motion.div key={goal.id} className="panel-card" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                style={{ position: 'relative', borderLeft: `4px solid ${color}`, cursor: 'pointer' }}
-                onClick={() => { setFundModal(goal); setFundAmount(''); }}
+              <motion.div key={goal.id} className="goal-card" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
+                style={{ borderLeft: `4px solid ${color}` }}
               >
-                <button onClick={(e) => { e.stopPropagation(); handleDelete(goal.id); }} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: '4px' }} title="Eliminar"><Trash2 size={16} /></button>
-                <h3 style={{ fontWeight: 700, fontSize: '16px', color: 'var(--color-text-primary)', marginBottom: '16px', paddingRight: '28px' }}>{goal.title}</h3>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>{formatCurrency(goal.currentAmount)}</span>
-                  <span style={{ fontSize: '13px', fontWeight: 700, color }}>{goal.progressPercent}%</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: 'var(--color-text-primary)', lineHeight: 1.3, flex: 1, paddingRight: '8px' }}>{goal.title}</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                    {goal.isCompleted && <span style={{ background: 'var(--color-emerald)', color: '#fff', fontSize: '9px', fontWeight: 700, padding: '2px 6px', borderRadius: '5px' }}>✓</span>}
+                    <button onClick={() => handleDelete(goal.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: '2px' }} title="Eliminar"><Trash2 size={14} /></button>
+                  </div>
                 </div>
-                <div className="progress-track" style={{ height: '10px', marginBottom: '12px' }}>
-                  <div style={{ width: `${goal.progressPercent}%`, height: '100%', borderRadius: '5px', background: color, transition: 'width 0.5s' }}></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{fmt(goal.currentAmount)}</span>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color }}>{goal.progressPercent}%</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--color-text-muted)' }}>
-                  <span>Meta: {formatCurrency(goal.targetAmount)}</span>
-                  <span>Faltan: {formatCurrency(remaining)}</span>
+                <div className="progress-track" style={{ height: '6px', marginBottom: '8px' }}>
+                  <div style={{ width: `${goal.progressPercent}%`, height: '100%', borderRadius: '3px', background: color, transition: 'width 0.5s' }}></div>
                 </div>
-                {goal.deadline && <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '8px' }}>Fecha límite: {formatDate(goal.deadline)}</p>}
-                {goal.isCompleted && <div style={{ position: 'absolute', top: '16px', left: '16px', background: 'var(--color-emerald)', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '6px' }}>✓ Completada</div>}
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--color-text-muted)', marginBottom: '10px' }}>
+                  <span>Meta: {fmt(goal.targetAmount)}</span>
+                  <span>Faltan: {fmt(remaining)}</span>
+                </div>
+                {goal.deadline && <p style={{ fontSize: '10px', color: 'var(--color-text-muted)', marginBottom: '10px' }}>Límite: {formatDate(goal.deadline)}</p>}
+                <button
+                  onClick={() => { setFundModal(goal); setFundAmount(''); }}
+                  style={{ width: '100%', padding: '8px 0', background: `${color}12`, color, border: `1px solid ${color}30`, borderRadius: '8px', fontWeight: 700, fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'all 0.2s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = `${color}25`; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = `${color}12`; }}
+                >
+                  <Plus size={14} /> Agregar Fondos
+                </button>
               </motion.div>
             );
           })}
@@ -190,7 +202,7 @@ const GoalsView = () => {
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="modal-content" onClick={e => e.stopPropagation()}>
               <button onClick={() => setFundModal(null)} className="modal-close"><X size={24} /></button>
               <h2 className="modal-title">Agregar a "{fundModal.title}"</h2>
-              <p style={{ color: 'var(--color-text-muted)', fontSize: '14px', marginBottom: '8px' }}>Progreso actual: {formatCurrency(fundModal.currentAmount)} / {formatCurrency(fundModal.targetAmount)}</p>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '14px', marginBottom: '8px' }}>Progreso actual: {fmt(fundModal.currentAmount)} / {fmt(fundModal.targetAmount)}</p>
               <div className="progress-track" style={{ height: '10px', marginBottom: '24px' }}>
                 <div style={{ width: `${fundModal.progressPercent}%`, height: '100%', borderRadius: '5px', background: 'var(--color-emerald)', transition: 'width 0.5s' }}></div>
               </div>
@@ -202,7 +214,7 @@ const GoalsView = () => {
                 </div>
               </div>
               <button onClick={handleFund} className="btn-primary" style={{ marginTop: '16px', background: 'var(--color-emerald)' }} disabled={fundLoading || !fundAmount}>
-                {fundLoading ? 'Agregando...' : `Agregar ${fundAmount ? formatCurrency(fundAmount) : ''}`}
+                {fundLoading ? 'Agregando...' : `Agregar ${fundAmount ? fmt(fundAmount) : ''}`}
               </button>
             </motion.div>
           </div>
@@ -217,6 +229,7 @@ const GoalsView = () => {
 /* ══  DEBTS VIEW (Deudas)                  ══ */
 /* ════════════════════════════════════════════ */
 const DebtsView = () => {
+  const { currency } = useAuth();
   const [data, setData] = useState({ iOwe: [], theyOwe: [], totalIOwe: 0, totalTheyOwe: 0 });
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -279,7 +292,7 @@ const DebtsView = () => {
             <div>
               <h4 style={{ fontWeight: 700, color: 'var(--color-text-primary)', fontSize: '15px' }}>{debt.personName}</h4>
               <p style={{ fontSize: '13px', fontWeight: 700, color: debt.type === 'i_owe' ? 'var(--color-danger)' : 'var(--color-emerald)' }}>
-                {debt.type === 'i_owe' ? '-' : ''}{formatCurrency(remaining)}
+                {debt.type === 'i_owe' ? '-' : ''}{formatCurrency(remaining, currency)}
               </p>
             </div>
           </div>
@@ -312,7 +325,7 @@ const DebtsView = () => {
         <div className="panel-card" style={{ borderTop: '3px solid var(--color-danger)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <h3 style={{ fontWeight: 700, fontSize: '18px', color: 'var(--color-text-primary)' }}>Debo</h3>
-            <span style={{ fontWeight: 800, fontSize: '20px', color: 'var(--color-danger)', fontFamily: 'monospace' }}>-{formatCurrency(data.totalIOwe)}</span>
+            <span style={{ fontWeight: 800, fontSize: '20px', color: 'var(--color-danger)', fontFamily: 'monospace' }}>-{formatCurrency(data.totalIOwe, currency)}</span>
           </div>
           {data.iOwe.length === 0 ? (
             <p style={{ textAlign: 'center', padding: '32px 0', color: 'var(--color-text-muted)', fontSize: '14px' }}>No debes nada 🎉</p>
@@ -325,7 +338,7 @@ const DebtsView = () => {
         <div className="panel-card" style={{ borderTop: '3px solid var(--color-emerald)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <h3 style={{ fontWeight: 700, fontSize: '18px', color: 'var(--color-text-primary)' }}>Me deben</h3>
-            <span style={{ fontWeight: 800, fontSize: '20px', color: 'var(--color-emerald)', fontFamily: 'monospace' }}>{formatCurrency(data.totalTheyOwe)}</span>
+            <span style={{ fontWeight: 800, fontSize: '20px', color: 'var(--color-emerald)', fontFamily: 'monospace' }}>{formatCurrency(data.totalTheyOwe, currency)}</span>
           </div>
           {data.theyOwe.length === 0 ? (
             <p style={{ textAlign: 'center', padding: '32px 0', color: 'var(--color-text-muted)', fontSize: '14px' }}>Nadie te debe</p>
@@ -367,7 +380,7 @@ const DebtsView = () => {
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="modal-content" onClick={e => e.stopPropagation()}>
               <button onClick={() => setPayModal(null)} className="modal-close"><X size={24} /></button>
               <h2 className="modal-title">{payModal.type === 'i_owe' ? 'Abonar a' : 'Recibir de'} {payModal.personName}</h2>
-              <p style={{ color: 'var(--color-text-muted)', fontSize: '14px', marginBottom: '8px' }}>Pagado: {formatCurrency(payModal.paidAmount)} / {formatCurrency(payModal.amount)}</p>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '14px', marginBottom: '8px' }}>Pagado: {formatCurrency(payModal.paidAmount, currency)} / {formatCurrency(payModal.amount, currency)}</p>
               <div className="progress-track" style={{ height: '10px', marginBottom: '24px' }}>
                 <div style={{ width: `${payModal.progressPercent}%`, height: '100%', borderRadius: '5px', background: payModal.type === 'i_owe' ? 'var(--color-danger)' : 'var(--color-emerald)', transition: 'width 0.5s' }}></div>
               </div>
@@ -376,7 +389,7 @@ const DebtsView = () => {
                 <div className="input-wrapper"><DollarSign className="input-icon" /><input className="form-input" type="number" step="0.01" min="0.01" value={payAmount} onChange={e => setPayAmount(e.target.value)} placeholder="0.00" autoFocus /></div>
               </div>
               <button onClick={handlePay} className="btn-primary" style={{ marginTop: '16px', background: payModal.type === 'i_owe' ? 'var(--color-danger)' : 'var(--color-emerald)' }} disabled={payLoading || !payAmount}>
-                {payLoading ? 'Registrando...' : `Registrar ${payAmount ? formatCurrency(payAmount) : ''}`}
+                {payLoading ? 'Registrando...' : `Registrar ${payAmount ? formatCurrency(payAmount, currency) : ''}`}
               </button>
             </motion.div>
           </div>
@@ -391,6 +404,7 @@ const DebtsView = () => {
 /* ══  REPORTS VIEW                         ══ */
 /* ════════════════════════════════════════════ */
 const ReportsView = () => {
+  const { currency } = useAuth();
   const [overview, setOverview] = useState(null);
   const [categories, setCategories] = useState([]);
   const [monthlyData, setMonthlyData] = useState([]);
@@ -431,7 +445,7 @@ const ReportsView = () => {
     return (
       <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: '12px', padding: '12px 16px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
         <p style={{ fontWeight: 700, fontSize: '13px', color: '#042B49', marginBottom: '6px' }}>{label}</p>
-        {payload.map((p, i) => (<p key={i} style={{ fontSize: '13px', color: p.color, fontWeight: 600 }}>{p.name}: {formatCurrency(p.value)}</p>))}
+        {payload.map((p, i) => (<p key={i} style={{ fontSize: '13px', color: p.color, fontWeight: 600 }}>{p.name}: {formatCurrency(p.value, currency)}</p>))}
       </div>
     );
   };
@@ -445,9 +459,9 @@ const ReportsView = () => {
         <button onClick={nextMonth} className="page-btn"><ChevronRight size={18} /></button>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '32px' }}>
-        <div className="report-card"><p className="report-card-label">Ingresos del Mes</p><p className="report-card-value" style={{ color: 'var(--color-emerald)' }}>{formatCurrency(overview?.totalIncome || 0)}</p></div>
-        <div className="report-card"><p className="report-card-label">Gastos del Mes</p><p className="report-card-value" style={{ color: 'var(--color-danger)' }}>{formatCurrency(overview?.totalExpenses || 0)}</p></div>
-        <div className="report-card"><p className="report-card-label">Balance</p><p className="report-card-value" style={{ color: (overview?.balance || 0) >= 0 ? 'var(--color-emerald)' : 'var(--color-danger)' }}>{formatCurrency(overview?.balance || 0)}</p></div>
+        <div className="report-card"><p className="report-card-label">Ingresos del Mes</p><p className="report-card-value" style={{ color: 'var(--color-emerald)' }}>{formatCurrency(overview?.totalIncome || 0, currency)}</p></div>
+        <div className="report-card"><p className="report-card-label">Gastos del Mes</p><p className="report-card-value" style={{ color: 'var(--color-danger)' }}>{formatCurrency(overview?.totalExpenses || 0, currency)}</p></div>
+        <div className="report-card"><p className="report-card-label">Balance</p><p className="report-card-value" style={{ color: (overview?.balance || 0) >= 0 ? 'var(--color-emerald)' : 'var(--color-danger)' }}>{formatCurrency(overview?.balance || 0, currency)}</p></div>
       </div>
       <div className="panel-card" style={{ marginBottom: '24px' }}>
         <h3 className="panel-title" style={{ marginBottom: '24px', fontSize: '18px' }}>Flujo de Efectivo — {year}</h3>
@@ -475,7 +489,7 @@ const ReportsView = () => {
           <h3 className="panel-title" style={{ marginBottom: '16px', fontSize: '18px' }}>Distribución por Categoría</h3>
           {pieData.length === 0 ? (<p style={{ color: 'var(--color-text-muted)', fontSize: '14px', textAlign: 'center', padding: '40px 0' }}>Sin datos para este mes</p>) : (<>
             <ResponsiveContainer width="100%" height={240}>
-              <PieChart><Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={3} dataKey="value" strokeWidth={0}>{pieData.map((_, i) => (<Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />))}</Pie><Tooltip formatter={v => formatCurrency(v)} contentStyle={{ borderRadius: '12px', border: '1px solid #E5E7EB', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} /></PieChart>
+              <PieChart><Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={3} dataKey="value" strokeWidth={0}>{pieData.map((_, i) => (<Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />))}</Pie><Tooltip formatter={v => formatCurrency(v, currency)} contentStyle={{ borderRadius: '12px', border: '1px solid #E5E7EB', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} /></PieChart>
             </ResponsiveContainer>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', justifyContent: 'center' }}>{pieData.map((cat, i) => (<div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600 }}><div style={{ width: '10px', height: '10px', borderRadius: '3px', background: PIE_COLORS[i % PIE_COLORS.length] }}></div>{cat.name} ({totalCat > 0 ? ((cat.value / totalCat) * 100).toFixed(0) : 0}%)</div>))}</div>
           </>)}
@@ -488,7 +502,7 @@ const ReportsView = () => {
                 const maxCat = Math.max(...categories.map(c => c.amount));
                 const pct = maxCat > 0 ? (cat.amount / maxCat) * 100 : 0;
                 const globalPct = totalCat > 0 ? ((cat.amount / totalCat) * 100).toFixed(1) : '0';
-                return (<div key={i}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}><div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '8px', height: '8px', borderRadius: '2px', background: PIE_COLORS[i % PIE_COLORS.length] }}></div><span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--color-text-primary)' }}>{cat.category}</span></div><div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)' }}>{globalPct}%</span><span style={{ fontWeight: 700, fontSize: '14px', fontFamily: 'monospace' }}>{formatCurrency(cat.amount)}</span></div></div><div className="progress-track" style={{ height: '8px' }}><div style={{ width: `${pct}%`, height: '100%', borderRadius: '4px', background: PIE_COLORS[i % PIE_COLORS.length], transition: 'width 0.5s' }}></div></div></div>);
+                return (<div key={i}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}><div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '8px', height: '8px', borderRadius: '2px', background: PIE_COLORS[i % PIE_COLORS.length] }}></div><span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--color-text-primary)' }}>{cat.category}</span></div><div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)' }}>{globalPct}%</span><span style={{ fontWeight: 700, fontSize: '14px', fontFamily: 'monospace' }}>{formatCurrency(cat.amount, currency)}</span></div></div><div className="progress-track" style={{ height: '8px' }}><div style={{ width: `${pct}%`, height: '100%', borderRadius: '4px', background: PIE_COLORS[i % PIE_COLORS.length], transition: 'width 0.5s' }}></div></div></div>);
               })}
             </div>
           )}
@@ -502,7 +516,7 @@ const ReportsView = () => {
 /* ══  SETTINGS VIEW                        ══ */
 /* ════════════════════════════════════════════ */
 const SettingsView = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, setCurrency } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -519,8 +533,12 @@ const SettingsView = () => {
 
   const handleSave = async () => {
     setSaving(true); setSuccess('');
-    try { await settingsAPI.update(prefs); setSuccess('Configuración guardada correctamente'); setTimeout(() => setSuccess(''), 3000); }
-    catch (err) { console.error(err); }
+    try {
+      await settingsAPI.update(prefs);
+      setCurrency(prefs.currency);
+      setSuccess('Configuración guardada correctamente');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) { console.error(err); }
     finally { setSaving(false); }
   };
 
@@ -564,7 +582,7 @@ const SettingsView = () => {
 /* ════════════════════════════════════════════ */
 const DashboardPage = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, currency } = useAuth();
   const [currentView, setCurrentView] = useState('dashboard');
   const [dashData, setDashData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -581,6 +599,7 @@ const DashboardPage = () => {
 
   const handleLogout = () => { logout(); navigate('/login'); };
   const userName = user?.firstName || user?.name || 'Usuario';
+  const fmt = (v) => formatCurrency(v, currency);
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', width: '100vw', background: '#F8FAFC', flexDirection: 'column', gap: '16px' }}>
@@ -614,7 +633,7 @@ const DashboardPage = () => {
       {error && (<div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', color: '#DC2626', fontSize: '14px' }}>{error}</div>)}
       <div className="stats-grid">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="stat-card dark">
-          <div><h3 className="stat-label-dark">Saldo Total</h3><div className="stat-value-dark">{formatCurrency(summary.totalBalance?.amount || 0)}</div></div>
+          <div><h3 className="stat-label-dark">Saldo Total</h3><div className="stat-value-dark">{fmt(summary.totalBalance?.amount || 0)}</div></div>
           <div className="stat-trend-dark"><TrendingUp size={16} />{summary.totalBalance?.changePercent > 0 ? '+' : ''}{summary.totalBalance?.changePercent || 0}% {summary.totalBalance?.changeLabel || 'desde el mes pasado'}</div>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="stat-card">
@@ -622,14 +641,14 @@ const DashboardPage = () => {
             <div className="stat-icon green"><ArrowDownRight size={24} strokeWidth={2.5} /></div>
             <button onClick={() => setModalType('income')} style={{ background: 'none', border: 'none', color: 'var(--color-emerald)', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}><Plus size={16} /> Añadir</button>
           </div>
-          <div><h3 className="stat-label">Ingresos Mensuales</h3><div className="stat-value">{formatCurrency(summary.monthlyIncome?.amount || 0)}</div><div className="progress-track"><div className="progress-fill green" style={{ width: `${summary.monthlyIncome?.progressPercent || 0}%` }}></div></div><div className="stat-desc">{summary.monthlyIncome?.progressPercent || 0}% {summary.monthlyIncome?.label || 'de los ingresos proyectados'}</div></div>
+          <div><h3 className="stat-label">Ingresos Mensuales</h3><div className="stat-value">{fmt(summary.monthlyIncome?.amount || 0)}</div><div className="progress-track"><div className="progress-fill green" style={{ width: `${summary.monthlyIncome?.progressPercent || 0}%` }}></div></div><div className="stat-desc">{summary.monthlyIncome?.progressPercent || 0}% {summary.monthlyIncome?.label || 'de los ingresos proyectados'}</div></div>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="stat-card">
           <div className="stat-header">
             <div className="stat-icon red"><ArrowUpRight size={24} strokeWidth={2.5} /></div>
             <button onClick={() => setModalType('expense')} style={{ background: 'none', border: 'none', color: 'var(--color-danger)', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}><Plus size={16} /> Añadir</button>
           </div>
-          <div><h3 className="stat-label">Gastos Mensuales</h3><div className="stat-value">{formatCurrency(summary.monthlyExpenses?.amount || 0)}</div><div className="progress-track"><div className="progress-fill red" style={{ width: `${summary.monthlyExpenses?.budgetUsedPercent || 0}%` }}></div></div><div className="stat-desc">{summary.monthlyExpenses?.label || 'Aún no hay presupuesto configurado'}</div></div>
+          <div><h3 className="stat-label">Gastos Mensuales</h3><div className="stat-value">{fmt(summary.monthlyExpenses?.amount || 0)}</div><div className="progress-track"><div className="progress-fill red" style={{ width: `${summary.monthlyExpenses?.budgetUsedPercent || 0}%` }}></div></div><div className="stat-desc">{summary.monthlyExpenses?.label || 'Aún no hay presupuesto configurado'}</div></div>
         </motion.div>
       </div>
       <div className="bottom-grid">
@@ -647,7 +666,7 @@ const DashboardPage = () => {
             ) : (
               transactions.map((tx, idx) => {
                 const Icon = getTransactionIcon(tx.icon);
-                return (<div key={tx.id || idx} className="tx-item"><div className="tx-info"><div className="tx-icon"><Icon size={24} strokeWidth={2} /></div><div><h4 className="tx-title">{tx.title}</h4><p className="tx-desc">{tx.description || tx.category} • {formatDate(tx.transactionDate)}</p></div></div><span className={`tx-amount ${tx.type === 'income' ? 'income' : ''}`}>{tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}</span></div>);
+                return (<div key={tx.id || idx} className="tx-item"><div className="tx-info"><div className="tx-icon"><Icon size={24} strokeWidth={2} /></div><div><h4 className="tx-title">{tx.title}</h4><p className="tx-desc">{tx.description || tx.category} • {formatDate(tx.transactionDate)}</p></div></div><span className={`tx-amount ${tx.type === 'income' ? 'income' : ''}`}>{tx.type === 'income' ? '+' : '-'}{fmt(tx.amount)}</span></div>);
               })
             )}
           </div>
@@ -658,7 +677,7 @@ const DashboardPage = () => {
             {goals.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--color-text-muted)' }}><Target size={32} style={{ margin: '0 auto 8px auto', opacity: 0.4 }} /><p style={{ fontSize: '14px' }}>No tienes metas activas</p><p style={{ fontSize: '12px', marginTop: '4px' }}>Crea tu primera meta de ahorro</p></div>
             ) : (
-              goals.map((goal, idx) => (<div key={goal.id || idx}><div className="goal-header"><h4 className="goal-title">{goal.title}</h4><span className="goal-percent">{goal.progressPercent || 0}%</span></div><div className="goal-track"><div className={`goal-fill ${goal.isCompleted ? 'emerald' : 'navy'}`} style={{ width: `${goal.progressPercent || 0}%` }}></div></div><p className="goal-meta">Meta: {formatCurrency(goal.targetAmount)}</p></div>))
+              goals.map((goal, idx) => (<div key={goal.id || idx}><div className="goal-header"><h4 className="goal-title">{goal.title}</h4><span className="goal-percent">{goal.progressPercent || 0}%</span></div><div className="goal-track"><div className={`goal-fill ${goal.isCompleted ? 'emerald' : 'navy'}`} style={{ width: `${goal.progressPercent || 0}%` }}></div></div><p className="goal-meta">Meta: {fmt(goal.targetAmount)}</p></div>))
             )}
           </div>
           <button className="btn-secondary" onClick={() => setCurrentView('goals')}>Ver Todas las Metas</button>
