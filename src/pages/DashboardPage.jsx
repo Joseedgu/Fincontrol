@@ -7,6 +7,7 @@ import { dashboardAPI, transactionsAPI, reportsAPI, settingsAPI, goalsAPI } from
 import Logo from '../components/Logo';
 import TransactionModal from '../components/TransactionModal';
 import GoalModal from '../components/GoalModal';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import '../Dashboard.css';
 
 const navItems = [
@@ -234,7 +235,30 @@ const ReportsView = () => {
     );
   }
 
-  const maxBar = Math.max(...monthlyData.map(m => Math.max(m.income, m.expenses)), 1);
+  const PIE_COLORS = ['#042B49', '#00C48C', '#DC2626', '#00C6FF', '#6366F1', '#F59E0B', '#EC4899', '#8B5CF6'];
+
+  const chartData = monthlyData.map(m => ({
+    name: monthNames[m.month - 1].slice(0, 3),
+    Ingresos: m.income,
+    Gastos: m.expenses,
+  }));
+
+  const pieData = categories.map(c => ({ name: c.category, value: c.amount }));
+  const totalCat = pieData.reduce((s, c) => s + c.value, 0);
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    return (
+      <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: '12px', padding: '12px 16px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
+        <p style={{ fontWeight: 700, fontSize: '13px', color: '#042B49', marginBottom: '6px' }}>{label}</p>
+        {payload.map((p, i) => (
+          <p key={i} style={{ fontSize: '13px', color: p.color, fontWeight: 600 }}>
+            {p.name}: {formatCurrency(p.value)}
+          </p>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}>
@@ -267,55 +291,109 @@ const ReportsView = () => {
         </div>
       </div>
 
+      {/* ─── AREA CHART: Ingresos vs Gastos ─── */}
+      <div className="panel-card" style={{ marginBottom: '24px' }}>
+        <h3 className="panel-title" style={{ marginBottom: '24px', fontSize: '18px' }}>Flujo de Efectivo — {year}</h3>
+        <ResponsiveContainer width="100%" height={320}>
+          <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="gradIncome" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#00C48C" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#00C48C" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="gradExpense" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#DC2626" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#DC2626" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+            <XAxis dataKey="name" tick={{ fontSize: 12, fontWeight: 600, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} />
+            <Tooltip content={<CustomTooltip />} />
+            <Area type="monotone" dataKey="Ingresos" stroke="#00C48C" strokeWidth={2.5} fill="url(#gradIncome)" dot={{ r: 4, fill: '#00C48C', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
+            <Area type="monotone" dataKey="Gastos" stroke="#DC2626" strokeWidth={2.5} fill="url(#gradExpense)" dot={{ r: 4, fill: '#DC2626', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
+          </AreaChart>
+        </ResponsiveContainer>
+        <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', marginTop: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600, color: '#111827' }}>
+            <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#00C48C' }}></div> Ingresos
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600, color: '#111827' }}>
+            <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#DC2626' }}></div> Gastos
+          </div>
+        </div>
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-        {/* By Category */}
+        {/* ─── PIE CHART: Categorías ─── */}
         <div className="panel-card">
-          <h3 className="panel-title" style={{ marginBottom: '24px', fontSize: '18px' }}>Gastos por Categoría</h3>
+          <h3 className="panel-title" style={{ marginBottom: '16px', fontSize: '18px' }}>Distribución por Categoría</h3>
+          {pieData.length === 0 ? (
+            <p style={{ color: 'var(--color-text-muted)', fontSize: '14px', textAlign: 'center', padding: '40px 0' }}>Sin datos para este mes</p>
+          ) : (
+            <>
+              <ResponsiveContainer width="100%" height={240}>
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={95}
+                    paddingAngle={3}
+                    dataKey="value"
+                    strokeWidth={0}
+                  >
+                    {pieData.map((_, i) => (
+                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => formatCurrency(value)} contentStyle={{ borderRadius: '12px', border: '1px solid #E5E7EB', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', justifyContent: 'center' }}>
+                {pieData.map((cat, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600 }}>
+                    <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: PIE_COLORS[i % PIE_COLORS.length] }}></div>
+                    {cat.name} ({totalCat > 0 ? ((cat.value / totalCat) * 100).toFixed(0) : 0}%)
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* ─── Category Breakdown List ─── */}
+        <div className="panel-card">
+          <h3 className="panel-title" style={{ marginBottom: '24px', fontSize: '18px' }}>Desglose de Gastos</h3>
           {categories.length === 0 ? (
-            <p style={{ color: 'var(--color-text-muted)', fontSize: '14px', textAlign: 'center', padding: '24px 0' }}>Sin datos para este mes</p>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: '14px', textAlign: 'center', padding: '40px 0' }}>Sin datos para este mes</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {categories.map((cat, i) => {
                 const maxCat = Math.max(...categories.map(c => c.amount));
                 const pct = maxCat > 0 ? (cat.amount / maxCat) * 100 : 0;
+                const globalPct = totalCat > 0 ? ((cat.amount / totalCat) * 100).toFixed(1) : '0';
                 return (
                   <div key={i}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                      <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--color-text-primary)' }}>{cat.category}</span>
-                      <span style={{ fontWeight: 700, fontSize: '14px', fontFamily: 'monospace' }}>{formatCurrency(cat.amount)}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: PIE_COLORS[i % PIE_COLORS.length] }}></div>
+                        <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--color-text-primary)' }}>{cat.category}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)' }}>{globalPct}%</span>
+                        <span style={{ fontWeight: 700, fontSize: '14px', fontFamily: 'monospace' }}>{formatCurrency(cat.amount)}</span>
+                      </div>
                     </div>
-                    <div className="progress-track">
-                      <div className="progress-fill red" style={{ width: `${pct}%`, transition: 'width 0.5s' }}></div>
+                    <div className="progress-track" style={{ height: '8px' }}>
+                      <div style={{ width: `${pct}%`, height: '100%', borderRadius: '4px', background: PIE_COLORS[i % PIE_COLORS.length], transition: 'width 0.5s' }}></div>
                     </div>
                   </div>
                 );
               })}
             </div>
           )}
-        </div>
-
-        {/* Monthly Chart */}
-        <div className="panel-card">
-          <h3 className="panel-title" style={{ marginBottom: '24px', fontSize: '18px' }}>Ingresos vs Gastos {year}</h3>
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-end', height: '180px' }}>
-            {monthlyData.map((m, i) => (
-              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', height: '100%', justifyContent: 'flex-end' }}>
-                <div style={{ display: 'flex', gap: '2px', alignItems: 'flex-end', width: '100%', height: '100%' }}>
-                  <div style={{ flex: 1, background: 'var(--color-emerald)', borderRadius: '3px 3px 0 0', height: `${Math.max(2, (m.income / maxBar) * 100)}%`, transition: 'height 0.5s' }} title={`Ingresos: ${formatCurrency(m.income)}`}></div>
-                  <div style={{ flex: 1, background: 'var(--color-danger)', borderRadius: '3px 3px 0 0', height: `${Math.max(2, (m.expenses / maxBar) * 100)}%`, transition: 'height 0.5s' }} title={`Gastos: ${formatCurrency(m.expenses)}`}></div>
-                </div>
-                <span style={{ fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 600 }}>{monthNames[i].slice(0, 3)}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600 }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: 'var(--color-emerald)' }}></div> Ingresos
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600 }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: 'var(--color-danger)' }}></div> Gastos
-            </div>
-          </div>
         </div>
       </div>
     </motion.div>
