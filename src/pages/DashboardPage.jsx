@@ -848,7 +848,7 @@ const DashboardPage = () => {
       {/* Mobile overlay */}
       <div className={`mobile-overlay ${mobileMenuOpen ? 'show' : ''}`} onClick={() => setMobileMenuOpen(false)} />
 
-      <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''} ${mobileMenuOpen ? 'mobile-open' : ''}`} style={{ position: 'relative' }}>
+      <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''} ${mobileMenuOpen ? 'mobile-open' : ''}`}>
         <div>
           <div className="logo-container"><Logo variant="dark" /></div>
           <nav>
