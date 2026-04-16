@@ -1,9 +1,11 @@
 .dashboard-layout {
   display: flex;
   width: 100vw;
+  max-width: 100%;
   height: 100vh;
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
 }
 
 /* Sidebar */
@@ -97,19 +99,19 @@
 
 @media (max-width: 768px) {
   .sidebar {
-    position: fixed;
-    left: -300px;
+    position: fixed !important;
+    left: -320px !important;
     top: 0;
     height: 100vh;
-    z-index: 100;
+    z-index: 999 !important;
     width: 280px !important;
     padding: 40px 24px !important;
     box-shadow: 4px 0 20px rgba(0,0,0,0.15);
-    transition: left 0.3s;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .sidebar.mobile-open {
-    left: 0;
+    left: 0 !important;
   }
 
   .sidebar.collapsed { width: 280px !important; }
@@ -202,8 +204,10 @@
   flex-direction: column;
   background-color: var(--color-white);
   overflow-y: auto;
+  overflow-x: hidden;
   height: 100vh;
-  min-width: 0;
+  width: 100%;
+  max-width: 100vw;
 }
 
 /* Modals */
