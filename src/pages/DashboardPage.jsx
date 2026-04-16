@@ -11,11 +11,11 @@ import GoalModal from '../components/GoalModal';
 import '../Dashboard.css';
 
 const navItems = [
-  { id: 'dashboard', icon: LayoutGrid, label: 'Panel' },
-  { id: 'goals', icon: Target, label: 'Metas' },
-  { id: 'debts', icon: Users, label: 'Deudas' },
-  { id: 'reports', icon: Activity, label: 'Reportes' },
-  { id: 'settings', icon: Settings, label: 'Configuración' },
+  { id: 'dashboard', icon: LayoutGrid, labelKey: 'panel' },
+  { id: 'goals', icon: Target, labelKey: 'goals' },
+  { id: 'debts', icon: Users, labelKey: 'debts' },
+  { id: 'reports', icon: Activity, labelKey: 'reports' },
+  { id: 'settings', icon: Settings, labelKey: 'settings' },
 ];
 
 const iconMap = {
@@ -28,6 +28,48 @@ const CURRENCY_SYMBOLS = { DOP: 'RD$', USD: '$', EUR: '€' };
 const formatCurrency = (amount, cur) => {
   const prefix = CURRENCY_SYMBOLS[cur] || 'RD$';
   return `${prefix} ${Number(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
+/* ─── i18n TRANSLATIONS ─── */
+const T = {
+  es: {
+    panel: 'Panel', goals: 'Metas', debts: 'Deudas', reports: 'Reportes', settings: 'Configuración',
+    logout: 'Cerrar sesión', search: 'Buscar transacciones, reportes...',
+    savingsGoals: 'Metas de Ahorro', activeGoal: 'meta activa', activeGoals: 'metas activas',
+    saved: 'Ahorrado', totalTarget: 'Objetivo Total', globalProgress: 'Progreso Global',
+    noActiveGoals: 'No tienes metas activas', createFirst: 'Crea tu primera meta para empezar a ahorrar.',
+    newGoal: 'Nueva Meta', remaining: 'restante', addFunds: 'Agregar fondos', deleteGoal: 'Eliminar',
+    debtsTitle: 'Deudas', debtsSubtitle: 'Lleva el control de lo que debes y te deben',
+    iOwe: 'Debo', theyOweMe: 'Me Deben', totalDebts: 'Total Deudas',
+    debt: 'deuda', debtsPlural: 'deudas', registered: 'registrada', registeredPlural: 'registradas',
+    newDebt: 'Nueva Deuda', noDebts: 'No tienes deudas registradas', registerDebt: 'Registra una deuda para llevar el control.',
+    owesBadge: 'Debo', owedBadge: 'Me debe', of: 'de',
+    reportsTitle: 'Reportes', monthIncome: 'Ingresos del Mes', monthExpenses: 'Gastos del Mes', balance: 'Balance',
+    cashFlow: 'Flujo de Efectivo', income: 'Ingresos', expenses: 'Gastos', categories: 'Categorías',
+    expenseBreak: 'Desglose de Gastos', noData: 'Sin datos para este mes',
+    settingsTitle: 'Configuración', profile: 'Perfil vinculado a tu correo electrónico.',
+    preferences: 'Preferencias', currency: 'Moneda', language: 'Idioma', theme: 'Tema',
+    light: 'Claro', darkSoon: 'Oscuro (próximamente)', save: 'Guardar Cambios', saving: 'Guardando...', saved_msg: 'Configuración guardada correctamente',
+  },
+  en: {
+    panel: 'Dashboard', goals: 'Goals', debts: 'Debts', reports: 'Reports', settings: 'Settings',
+    logout: 'Sign out', search: 'Search transactions, reports...',
+    savingsGoals: 'Savings Goals', activeGoal: 'active goal', activeGoals: 'active goals',
+    saved: 'Saved', totalTarget: 'Total Target', globalProgress: 'Global Progress',
+    noActiveGoals: 'No active goals', createFirst: 'Create your first goal to start saving.',
+    newGoal: 'New Goal', remaining: 'remaining', addFunds: 'Add funds', deleteGoal: 'Delete',
+    debtsTitle: 'Debts', debtsSubtitle: 'Track what you owe and what is owed to you',
+    iOwe: 'I Owe', theyOweMe: 'Owed to Me', totalDebts: 'Total Debts',
+    debt: 'debt', debtsPlural: 'debts', registered: 'registered', registeredPlural: 'registered',
+    newDebt: 'New Debt', noDebts: 'No debts registered', registerDebt: 'Register a debt to start tracking.',
+    owesBadge: 'I owe', owedBadge: 'Owes me', of: 'of',
+    reportsTitle: 'Reports', monthIncome: 'Month Income', monthExpenses: 'Month Expenses', balance: 'Balance',
+    cashFlow: 'Cash Flow', income: 'Income', expenses: 'Expenses', categories: 'Categories',
+    expenseBreak: 'Expense Breakdown', noData: 'No data for this month',
+    settingsTitle: 'Settings', profile: 'Your profile is linked to your email.',
+    preferences: 'Preferences', currency: 'Currency', language: 'Language', theme: 'Theme',
+    light: 'Light', darkSoon: 'Dark (coming soon)', save: 'Save Changes', saving: 'Saving...', saved_msg: 'Settings saved successfully',
+  }
 };
 
 const formatDate = (dateStr) => {
@@ -163,28 +205,28 @@ const GoalsView = () => {
             const remaining = Math.max(0, goal.targetAmount - goal.currentAmount);
             return (
               <motion.div key={goal.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }}
-                style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '14px 20px', borderBottom: i < goals.length - 1 ? '1px solid var(--color-border)' : 'none', transition: 'background 0.15s' }}
+                style={{ display: 'flex', alignItems: 'center', gap: '18px', padding: '18px 22px', borderBottom: i < goals.length - 1 ? '1px solid var(--color-border)' : 'none', transition: 'background 0.15s' }}
                 className="goal-row"
               >
                 {/* Color dot + progress ring */}
-                <div style={{ position: 'relative', width: '42px', height: '42px', flexShrink: 0 }}>
-                  <svg width="42" height="42" viewBox="0 0 42 42">
-                    <circle cx="21" cy="21" r="18" fill="none" stroke="#E5E7EB" strokeWidth="3" />
-                    <circle cx="21" cy="21" r="18" fill="none" stroke={color} strokeWidth="3"
-                      strokeDasharray={`${(goal.progressPercent / 100) * 113.1} 113.1`}
-                      strokeLinecap="round" transform="rotate(-90 21 21)"
+                <div style={{ position: 'relative', width: '48px', height: '48px', flexShrink: 0 }}>
+                  <svg width="48" height="48" viewBox="0 0 48 48">
+                    <circle cx="24" cy="24" r="20" fill="none" stroke="#E5E7EB" strokeWidth="3" />
+                    <circle cx="24" cy="24" r="20" fill="none" stroke={color} strokeWidth="3"
+                      strokeDasharray={`${(goal.progressPercent / 100) * 125.66} 125.66`}
+                      strokeLinecap="round" transform="rotate(-90 24 24)"
                       style={{ transition: 'stroke-dasharray 0.5s' }} />
                   </svg>
-                  <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', fontSize: '10px', fontWeight: 800, color }}>{goal.progressPercent}%</span>
+                  <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', fontSize: '11px', fontWeight: 800, color }}>{goal.progressPercent}%</span>
                 </div>
 
                 {/* Info */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                    <h4 style={{ fontWeight: 700, fontSize: '14px', color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{goal.title}</h4>
+                    <h4 style={{ fontWeight: 700, fontSize: '15px', color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{goal.title}</h4>
                     {goal.isCompleted && <span style={{ background: 'var(--color-emerald)', color: '#fff', fontSize: '9px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', flexShrink: 0 }}>✓</span>}
                   </div>
-                  <p style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                  <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
                     {fmt(goal.currentAmount)} <span style={{ opacity: 0.5 }}>/</span> {fmt(goal.targetAmount)}
                     {goal.deadline && <span style={{ marginLeft: '8px', opacity: 0.6 }}>• {formatDate(goal.deadline)}</span>}
                   </p>
@@ -192,8 +234,8 @@ const GoalsView = () => {
 
                 {/* Remaining */}
                 <div style={{ textAlign: 'right', flexShrink: 0, minWidth: '100px' }}>
-                  <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'monospace' }}>{fmt(remaining)}</p>
-                  <p style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>restante</p>
+                  <p style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'monospace' }}>{fmt(remaining)}</p>
+                  <p style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>restante</p>
                 </div>
 
                 {/* Actions */}
@@ -201,7 +243,7 @@ const GoalsView = () => {
                   <button
                     onClick={() => { setFundModal(goal); setFundAmount(''); }}
                     title="Agregar fondos"
-                    style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', background: `${color}15`, color, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                    style={{ width: '34px', height: '34px', borderRadius: '8px', border: 'none', background: `${color}15`, color, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
                     onMouseEnter={e => { e.currentTarget.style.background = `${color}30`; }}
                     onMouseLeave={e => { e.currentTarget.style.background = `${color}15`; }}
                   >
@@ -403,9 +445,9 @@ const DebtsView = () => {
           <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>{data.theyOwe.length} deuda{data.theyOwe.length !== 1 ? 's' : ''}</p>
         </div>
         <div style={{ background: 'var(--color-navy)', borderRadius: '14px', padding: '16px 20px', color: '#fff' }}>
-          <p style={{ fontSize: '11px', opacity: 0.7, marginBottom: '4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Balance</p>
-          <p style={{ fontSize: '20px', fontWeight: 800, fontFamily: 'monospace' }}>{balance >= 0 ? '+' : ''}{formatCurrency(balance, currency)}</p>
-          <p style={{ fontSize: '11px', opacity: 0.6, marginTop: '4px' }}>{balance >= 0 ? 'A tu favor' : 'En contra'}</p>
+          <p style={{ fontSize: '11px', opacity: 0.7, marginBottom: '4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Deudas</p>
+          <p style={{ fontSize: '20px', fontWeight: 800, fontFamily: 'monospace' }}>{allDebts.length}</p>
+          <p style={{ fontSize: '11px', opacity: 0.6, marginTop: '4px' }}>{formatCurrency(data.totalIOwe + data.totalTheyOwe, currency)} en total</p>
         </div>
       </div>
 
@@ -590,8 +632,9 @@ const ReportsView = () => {
 /* ══  SETTINGS VIEW                        ══ */
 /* ════════════════════════════════════════════ */
 const SettingsView = () => {
-  const { user, logout, setCurrency } = useAuth();
+  const { user, logout, setCurrency, setLanguage, language: currentLang } = useAuth();
   const navigate = useNavigate();
+  const t = T[currentLang] || T.es;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
@@ -610,7 +653,8 @@ const SettingsView = () => {
     try {
       await settingsAPI.update(prefs);
       setCurrency(prefs.currency);
-      setSuccess('Configuración guardada correctamente');
+      setLanguage(prefs.language);
+      setSuccess(t.saved_msg);
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) { console.error(err); }
     finally { setSaving(false); }
@@ -634,11 +678,11 @@ const SettingsView = () => {
           <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', lineHeight: '1.6' }}>Tu perfil está vinculado a tu correo electrónico.</p>
         </div>
         <div className="panel-card">
-          <h3 style={{ fontWeight: 700, marginBottom: '20px', color: 'var(--color-text-primary)' }}>Preferencias</h3>
-          <div className="form-group" style={{ marginBottom: '16px' }}><label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Globe size={14} /> Moneda</label><select className="form-input no-icon" value={prefs.currency} onChange={e => setPrefs(p => ({ ...p, currency: e.target.value }))}><option value="DOP">Peso Dominicano (DOP)</option><option value="USD">Dólar (USD)</option><option value="EUR">Euro (EUR)</option></select></div>
-          <div className="form-group" style={{ marginBottom: '16px' }}><label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Globe size={14} /> Idioma</label><select className="form-input no-icon" value={prefs.language} onChange={e => setPrefs(p => ({ ...p, language: e.target.value }))}><option value="es">Español</option><option value="en">English</option></select></div>
-          <div className="form-group" style={{ marginBottom: '24px' }}><label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Palette size={14} /> Tema</label><select className="form-input no-icon" value={prefs.theme} onChange={e => setPrefs(p => ({ ...p, theme: e.target.value }))}><option value="light">Claro</option><option value="dark">Oscuro (próximamente)</option></select></div>
-          <button onClick={handleSave} className="btn-primary" style={{ gap: '8px' }} disabled={saving}>{saving ? <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Guardando...</> : <><Save size={18} /> Guardar Cambios</>}</button>
+          <h3 style={{ fontWeight: 700, marginBottom: '20px', color: 'var(--color-text-primary)' }}>{t.preferences}</h3>
+          <div className="form-group" style={{ marginBottom: '16px' }}><label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Globe size={14} /> {t.currency}</label><select className="form-input no-icon" value={prefs.currency} onChange={e => setPrefs(p => ({ ...p, currency: e.target.value }))}><option value="DOP">Peso Dominicano (DOP)</option><option value="USD">Dólar (USD)</option><option value="EUR">Euro (EUR)</option></select></div>
+          <div className="form-group" style={{ marginBottom: '16px' }}><label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Globe size={14} /> {t.language}</label><select className="form-input no-icon" value={prefs.language} onChange={e => setPrefs(p => ({ ...p, language: e.target.value }))}><option value="es">Español</option><option value="en">English</option></select></div>
+          <div className="form-group" style={{ marginBottom: '24px' }}><label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Palette size={14} /> {t.theme}</label><select className="form-input no-icon" value={prefs.theme} onChange={e => setPrefs(p => ({ ...p, theme: e.target.value }))}><option value="light">{t.light}</option><option value="dark">{t.darkSoon}</option></select></div>
+          <button onClick={handleSave} className="btn-primary" style={{ gap: '8px' }} disabled={saving}>{saving ? <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> {t.saving}</> : <><Save size={18} /> {t.save}</>}</button>
         </div>
       </div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
@@ -651,7 +695,8 @@ const SettingsView = () => {
 /* ════════════════════════════════════════════ */
 const DashboardPage = () => {
   const navigate = useNavigate();
-  const { user, logout, currency } = useAuth();
+  const { user, logout, currency, language } = useAuth();
+  const t = T[language] || T.es;
   const [currentView, setCurrentView] = useState('dashboard');
   const [dashData, setDashData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -761,16 +806,16 @@ const DashboardPage = () => {
         <div>
           <div className="logo-container"><Logo variant="dark" /></div>
           <nav>
-            {navItems.map(({ id, icon: Icon, label }) => (
-              <button key={id} onClick={() => setCurrentView(id)} className={`nav-item ${currentView === id ? 'active' : ''}`}><Icon size={20} />{label}</button>
+            {navItems.map(({ id, icon: Icon, labelKey }) => (
+              <button key={id} onClick={() => setCurrentView(id)} className={`nav-item ${currentView === id ? 'active' : ''}`}><Icon size={20} />{t[labelKey]}</button>
             ))}
           </nav>
         </div>
-        <button className="logout-btn" onClick={handleLogout}><LogOut size={20} />Cerrar sesión</button>
+        <button className="logout-btn" onClick={handleLogout}><LogOut size={20} />{t.logout}</button>
       </aside>
       <main className="main-content">
         <header className="header">
-          <div className="search-bar"><Search className="search-icon" size={20} /><input type="text" placeholder="Buscar transacciones, reportes..." className="search-input" /></div>
+          <div className="search-bar"><Search className="search-icon" size={20} /><input type="text" placeholder={t.search} className="search-input" /></div>
           <div className="header-actions">
             <div style={{ display: 'flex', gap: '16px' }}>
               <button className="icon-btn"><Bell size={24} />{dashData?.notifications?.unreadCount > 0 && <div className="badge"></div>}</button>

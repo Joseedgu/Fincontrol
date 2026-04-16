@@ -28,6 +28,7 @@ const clearAll = () => {
   localStorage.removeItem('fincontrol_user');
   localStorage.removeItem('fincontrol_persist');
   localStorage.removeItem('fincontrol_currency');
+  localStorage.removeItem('fincontrol_language');
   sessionStorage.removeItem('fincontrol_token');
   sessionStorage.removeItem('fincontrol_user');
 };
@@ -44,9 +45,14 @@ const saveUser = (userData, token, persist) => {
   }
 };
 
+const getLanguage = () => {
+  return localStorage.getItem('fincontrol_language') || 'es';
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => getUser());
   const [currency, setCurrencyState] = useState(() => getCurrency());
+  const [language, setLanguageState] = useState(() => getLanguage());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -64,13 +70,15 @@ export const AuthProvider = ({ children }) => {
       const res = await authAPI.me();
       const u = res.data.user;
       setUser(u);
-      // Persist user data in the same storage it was already in
       const persist = localStorage.getItem('fincontrol_persist') === 'true';
       saveUser(u, token, persist);
-      // Restore currency if user has one
       if (u.currency) {
         setCurrencyState(u.currency);
         localStorage.setItem('fincontrol_currency', u.currency);
+      }
+      if (u.language) {
+        setLanguageState(u.language);
+        localStorage.setItem('fincontrol_language', u.language);
       }
     } catch {
       clearAll();
@@ -89,6 +97,10 @@ export const AuthProvider = ({ children }) => {
       setCurrencyState(userData.currency);
       localStorage.setItem('fincontrol_currency', userData.currency);
     }
+    if (userData.language) {
+      setLanguageState(userData.language);
+      localStorage.setItem('fincontrol_language', userData.language);
+    }
     return userData;
   };
 
@@ -105,13 +117,18 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('fincontrol_currency', c);
   };
 
+  const setLanguage = (l) => {
+    setLanguageState(l);
+    localStorage.setItem('fincontrol_language', l);
+  };
+
   const logout = () => {
     clearAll();
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, isAuthenticated: !!user, currency, setCurrency }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, isAuthenticated: !!user, currency, setCurrency, language, setLanguage }}>
       {children}
     </AuthContext.Provider>
   );
