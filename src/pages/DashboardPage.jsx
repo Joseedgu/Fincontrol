@@ -281,29 +281,47 @@ const DebtsView = () => {
   const renderDebtCard = (debt) => {
     const remaining = debt.amount - debt.paidAmount;
     const color = getDebtColor(debt.progressPercent);
+    const isMeDeben = debt.type === 'they_owe';
+    const mainColor = isMeDeben ? 'var(--color-emerald)' : 'var(--color-danger)';
+    
     return (
-      <motion.div key={debt.id} className="debt-card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-        onClick={() => { setPayModal(debt); setPayAmount(''); }}
-        style={{ cursor: 'pointer' }}
+      <motion.div key={debt.id} className="debt-card-modern" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+        style={{ borderLeft: `4px solid ${mainColor}` }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <UserAvatar name={debt.personName} size={40} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <UserAvatar name={debt.personName} size={36} />
             <div>
               <h4 style={{ fontWeight: 700, color: 'var(--color-text-primary)', fontSize: '15px' }}>{debt.personName}</h4>
-              <p style={{ fontSize: '13px', fontWeight: 700, color: debt.type === 'i_owe' ? 'var(--color-danger)' : 'var(--color-emerald)' }}>
-                {debt.type === 'i_owe' ? '-' : ''}{formatCurrency(remaining, currency)}
-              </p>
+              {debt.description && <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px' }}>{debt.description}</p>}
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 700, color }}>{debt.progressPercent}%</span>
-            <div style={{ width: '40px', height: '6px', borderRadius: '3px', background: '#E5E7EB', overflow: 'hidden' }}>
-              <div style={{ width: `${debt.progressPercent}%`, height: '100%', background: color, borderRadius: '3px' }}></div>
-            </div>
-            <button onClick={(e) => { e.stopPropagation(); handleDelete(debt.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: '4px' }}><Trash2 size={14} /></button>
-          </div>
+          <button onClick={(e) => { e.stopPropagation(); handleDelete(debt.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: '4px' }} title="Eliminar"><Trash2 size={16} /></button>
         </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+          <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>Pagado: <span style={{fontWeight: 700, color: 'var(--color-text-primary)'}}>{formatCurrency(debt.paidAmount, currency)}</span></span>
+          <span style={{ fontSize: '13px', fontWeight: 800, color }}>{debt.progressPercent}%</span>
+        </div>
+
+        <div className="progress-track" style={{ height: '6px', marginBottom: '12px' }}>
+          <div style={{ width: `${debt.progressPercent}%`, height: '100%', borderRadius: '3px', background: color, transition: 'width 0.5s' }}></div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
+          <span>Total: {formatCurrency(debt.amount, currency)}</span>
+          <span>Resta: <span style={{color: mainColor, fontWeight: 700}}>{formatCurrency(remaining, currency)}</span></span>
+        </div>
+
+        <button
+          onClick={() => { setPayModal(debt); setPayAmount(''); }}
+          style={{ width: '100%', padding: '10px 0', background: isMeDeben ? 'var(--color-emerald-bg)' : 'var(--color-danger-bg)', color: mainColor, border: `1px solid ${isMeDeben ? 'rgba(0,196,140,0.3)' : 'rgba(220,38,38,0.3)'}`, borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'all 0.2s' }}
+          onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(0.95)'; }}
+          onMouseLeave={e => { e.currentTarget.style.filter = 'none'; }}
+        >
+          {isMeDeben ? <ArrowDownRight size={16} /> : <ArrowUpRight size={16} />} 
+          {isMeDeben ? 'Recibir Pago' : 'Abonar a Deuda'}
+        </button>
       </motion.div>
     );
   };
@@ -566,11 +584,6 @@ const SettingsView = () => {
           <div className="form-group" style={{ marginBottom: '24px' }}><label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Palette size={14} /> Tema</label><select className="form-input no-icon" value={prefs.theme} onChange={e => setPrefs(p => ({ ...p, theme: e.target.value }))}><option value="light">Claro</option><option value="dark">Oscuro (próximamente)</option></select></div>
           <button onClick={handleSave} className="btn-primary" style={{ gap: '8px' }} disabled={saving}>{saving ? <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Guardando...</> : <><Save size={18} /> Guardar Cambios</>}</button>
         </div>
-      </div>
-      <div className="panel-card" style={{ marginTop: '24px', borderColor: 'var(--color-danger)' }}>
-        <h3 style={{ fontWeight: 700, color: 'var(--color-danger)', marginBottom: '12px' }}>Zona de Peligro</h3>
-        <p style={{ color: 'var(--color-text-muted)', fontSize: '14px', marginBottom: '16px' }}>Cerrar sesión en todos los dispositivos.</p>
-        <button onClick={() => { logout(); navigate('/login'); }} style={{ padding: '10px 20px', background: 'var(--color-danger-bg)', color: 'var(--color-danger)', border: '1px solid var(--color-danger)', borderRadius: '12px', fontWeight: 700, fontSize: '14px', cursor: 'pointer' }}>Cerrar todas las sesiones</button>
       </div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </motion.div>

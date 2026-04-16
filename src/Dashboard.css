@@ -642,19 +642,19 @@
   box-shadow: 0 4px 12px rgba(4, 43, 73, 0.06);
 }
 
-/* Debt Cards */
-.debt-card {
+/* Debt Cards Modern */
+.debt-card-modern {
   background: var(--color-white);
   border: 1px solid var(--color-border);
   border-radius: 14px;
-  padding: 16px 20px;
+  padding: 16px;
   transition: all 0.2s;
 }
 
-.debt-card:hover {
+.debt-card-modern:hover {
   border-color: var(--color-navy);
   box-shadow: 0 4px 12px rgba(4, 43, 73, 0.06);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 /* Responsive */
