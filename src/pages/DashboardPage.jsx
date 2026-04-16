@@ -117,60 +117,104 @@ const GoalsView = () => {
 
   if (loading) return <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--color-text-muted)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} /><p>Cargando metas...</p><style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style></div>;
 
+  const globalPct = totalTarget > 0 ? Math.round((totalSaved / totalTarget) * 100) : 0;
+
   return (
     <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
-          <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-navy)', marginBottom: '4px' }}>Metas de Ahorro</h1>
-          <p style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>Ahorrado: {fmt(totalSaved)} de {fmt(totalTarget)}</p>
+          <h1 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--color-navy)', marginBottom: '4px' }}>Metas de Ahorro</h1>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>{goals.length} meta{goals.length !== 1 ? 's' : ''} activa{goals.length !== 1 ? 's' : ''}</p>
         </div>
-        <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: 'var(--color-navy)', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 700, cursor: 'pointer', fontSize: '13px' }}>
+        <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 20px', background: 'var(--color-navy)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', fontSize: '13px' }}>
           <Plus size={16} /> Nueva Meta
         </button>
       </div>
 
+      {/* Summary Strip */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ background: 'var(--color-navy)', borderRadius: '14px', padding: '16px 20px', color: '#fff' }}>
+          <p style={{ fontSize: '11px', opacity: 0.7, marginBottom: '4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ahorrado</p>
+          <p style={{ fontSize: '20px', fontWeight: 800, fontFamily: 'monospace' }}>{fmt(totalSaved)}</p>
+        </div>
+        <div style={{ background: '#fff', borderRadius: '14px', padding: '16px 20px', border: '1px solid var(--color-border)' }}>
+          <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginBottom: '4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Objetivo Total</p>
+          <p style={{ fontSize: '20px', fontWeight: 800, color: 'var(--color-navy)', fontFamily: 'monospace' }}>{fmt(totalTarget)}</p>
+        </div>
+        <div style={{ background: '#fff', borderRadius: '14px', padding: '16px 20px', border: '1px solid var(--color-border)' }}>
+          <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginBottom: '4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Progreso Global</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <p style={{ fontSize: '20px', fontWeight: 800, color: globalPct >= 100 ? 'var(--color-emerald)' : 'var(--color-navy)', fontFamily: 'monospace' }}>{globalPct}%</p>
+            <div style={{ flex: 1, height: '6px', borderRadius: '3px', background: '#E5E7EB' }}><div style={{ width: `${Math.min(globalPct, 100)}%`, height: '100%', borderRadius: '3px', background: globalPct >= 100 ? 'var(--color-emerald)' : 'var(--color-navy)', transition: 'width 0.5s' }}></div></div>
+          </div>
+        </div>
+      </div>
+
       {goals.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '64px 0', color: 'var(--color-text-muted)' }}>
-          <Target size={42} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
-          <p style={{ fontSize: '15px', fontWeight: 600 }}>No tienes metas activas</p>
-          <p style={{ fontSize: '13px', marginTop: '6px' }}>Crea tu primera meta de ahorro para comenzar.</p>
+        <div className="panel-card" style={{ textAlign: 'center', padding: '48px 0' }}>
+          <Target size={36} style={{ margin: '0 auto 10px', opacity: 0.25, color: 'var(--color-navy)' }} />
+          <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text-secondary)' }}>No tienes metas activas</p>
+          <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px' }}>Crea tu primera meta para empezar a ahorrar.</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
+        <div className="panel-card" style={{ padding: 0, overflow: 'hidden' }}>
           {goals.map((goal, i) => {
             const color = GOAL_COLORS[i % GOAL_COLORS.length];
             const remaining = Math.max(0, goal.targetAmount - goal.currentAmount);
             return (
-              <motion.div key={goal.id} className="goal-card" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                style={{ borderLeft: `4px solid ${color}` }}
+              <motion.div key={goal.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }}
+                style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '14px 20px', borderBottom: i < goals.length - 1 ? '1px solid var(--color-border)' : 'none', transition: 'background 0.15s' }}
+                className="goal-row"
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: 'var(--color-text-primary)', lineHeight: 1.3, flex: 1, paddingRight: '8px' }}>{goal.title}</h3>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                    {goal.isCompleted && <span style={{ background: 'var(--color-emerald)', color: '#fff', fontSize: '9px', fontWeight: 700, padding: '2px 6px', borderRadius: '5px' }}>✓</span>}
-                    <button onClick={() => handleDelete(goal.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: '2px' }} title="Eliminar"><Trash2 size={14} /></button>
+                {/* Color dot + progress ring */}
+                <div style={{ position: 'relative', width: '42px', height: '42px', flexShrink: 0 }}>
+                  <svg width="42" height="42" viewBox="0 0 42 42">
+                    <circle cx="21" cy="21" r="18" fill="none" stroke="#E5E7EB" strokeWidth="3" />
+                    <circle cx="21" cy="21" r="18" fill="none" stroke={color} strokeWidth="3"
+                      strokeDasharray={`${(goal.progressPercent / 100) * 113.1} 113.1`}
+                      strokeLinecap="round" transform="rotate(-90 21 21)"
+                      style={{ transition: 'stroke-dasharray 0.5s' }} />
+                  </svg>
+                  <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', fontSize: '10px', fontWeight: 800, color }}>{goal.progressPercent}%</span>
+                </div>
+
+                {/* Info */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                    <h4 style={{ fontWeight: 700, fontSize: '14px', color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{goal.title}</h4>
+                    {goal.isCompleted && <span style={{ background: 'var(--color-emerald)', color: '#fff', fontSize: '9px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', flexShrink: 0 }}>✓</span>}
                   </div>
+                  <p style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                    {fmt(goal.currentAmount)} <span style={{ opacity: 0.5 }}>/</span> {fmt(goal.targetAmount)}
+                    {goal.deadline && <span style={{ marginLeft: '8px', opacity: 0.6 }}>• {formatDate(goal.deadline)}</span>}
+                  </p>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{fmt(goal.currentAmount)}</span>
-                  <span style={{ fontSize: '12px', fontWeight: 700, color }}>{goal.progressPercent}%</span>
+
+                {/* Remaining */}
+                <div style={{ textAlign: 'right', flexShrink: 0, minWidth: '100px' }}>
+                  <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'monospace' }}>{fmt(remaining)}</p>
+                  <p style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>restante</p>
                 </div>
-                <div className="progress-track" style={{ height: '6px', marginBottom: '8px' }}>
-                  <div style={{ width: `${goal.progressPercent}%`, height: '100%', borderRadius: '3px', background: color, transition: 'width 0.5s' }}></div>
+
+                {/* Actions */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                  <button
+                    onClick={() => { setFundModal(goal); setFundAmount(''); }}
+                    title="Agregar fondos"
+                    style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', background: `${color}15`, color, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = `${color}30`; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = `${color}15`; }}
+                  >
+                    <Plus size={16} strokeWidth={2.5} />
+                  </button>
+                  <button onClick={() => handleDelete(goal.id)} title="Eliminar"
+                    style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', background: 'transparent', color: 'var(--color-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-danger-bg)'; e.currentTarget.style.color = 'var(--color-danger)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-text-muted)'; }}
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--color-text-muted)', marginBottom: '10px' }}>
-                  <span>Meta: {fmt(goal.targetAmount)}</span>
-                  <span>Faltan: {fmt(remaining)}</span>
-                </div>
-                {goal.deadline && <p style={{ fontSize: '10px', color: 'var(--color-text-muted)', marginBottom: '10px' }}>Límite: {formatDate(goal.deadline)}</p>}
-                <button
-                  onClick={() => { setFundModal(goal); setFundAmount(''); }}
-                  style={{ width: '100%', padding: '8px 0', background: `${color}12`, color, border: `1px solid ${color}30`, borderRadius: '8px', fontWeight: 700, fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'all 0.2s' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = `${color}25`; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = `${color}12`; }}
-                >
-                  <Plus size={14} /> Agregar Fondos
-                </button>
               </motion.div>
             );
           })}
@@ -278,93 +322,105 @@ const DebtsView = () => {
 
   if (loading) return <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--color-text-muted)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} /><p>Cargando deudas...</p><style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style></div>;
 
-  const renderDebtCard = (debt) => {
+  const allDebts = [...data.iOwe, ...data.theyOwe];
+  const balance = data.totalTheyOwe - data.totalIOwe;
+
+  const renderDebtRow = (debt, idx, arr) => {
     const remaining = debt.amount - debt.paidAmount;
-    const color = getDebtColor(debt.progressPercent);
     const isMeDeben = debt.type === 'they_owe';
-    const mainColor = isMeDeben ? 'var(--color-emerald)' : 'var(--color-danger)';
-    
+    const accent = isMeDeben ? '#00C48C' : '#DC2626';
+
     return (
-      <motion.div key={debt.id} className="debt-card-modern" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-        style={{ borderLeft: `4px solid ${mainColor}` }}
+      <motion.div key={debt.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.03 }}
+        style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', borderBottom: idx < arr.length - 1 ? '1px solid var(--color-border)' : 'none' }}
+        className="goal-row"
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <UserAvatar name={debt.personName} size={36} />
-            <div>
-              <h4 style={{ fontWeight: 700, color: 'var(--color-text-primary)', fontSize: '15px' }}>{debt.personName}</h4>
-              {debt.description && <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px' }}>{debt.description}</p>}
-            </div>
+        <UserAvatar name={debt.personName} size={36} />
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+            <h4 style={{ fontWeight: 700, fontSize: '14px', color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{debt.personName}</h4>
+            <span style={{ fontSize: '10px', fontWeight: 700, padding: '1px 8px', borderRadius: '4px', flexShrink: 0, background: isMeDeben ? 'var(--color-emerald-bg)' : 'var(--color-danger-bg)', color: accent }}>{isMeDeben ? 'Me debe' : 'Debo'}</span>
           </div>
-          <button onClick={(e) => { e.stopPropagation(); handleDelete(debt.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: '4px' }} title="Eliminar"><Trash2 size={16} /></button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ flex: 1, height: '4px', borderRadius: '2px', background: '#E5E7EB', maxWidth: '120px' }}>
+              <div style={{ width: `${debt.progressPercent}%`, height: '100%', borderRadius: '2px', background: accent, transition: 'width 0.5s' }}></div>
+            </div>
+            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{debt.progressPercent}%</span>
+            {debt.description && <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', opacity: 0.6 }}>• {debt.description}</span>}
+          </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
-          <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>Pagado: <span style={{fontWeight: 700, color: 'var(--color-text-primary)'}}>{formatCurrency(debt.paidAmount, currency)}</span></span>
-          <span style={{ fontSize: '13px', fontWeight: 800, color }}>{debt.progressPercent}%</span>
+        <div style={{ textAlign: 'right', flexShrink: 0, minWidth: '100px' }}>
+          <p style={{ fontSize: '13px', fontWeight: 700, color: accent, fontFamily: 'monospace' }}>{isMeDeben ? '+' : '-'}{formatCurrency(remaining, currency)}</p>
+          <p style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>de {formatCurrency(debt.amount, currency)}</p>
         </div>
 
-        <div className="progress-track" style={{ height: '6px', marginBottom: '12px' }}>
-          <div style={{ width: `${debt.progressPercent}%`, height: '100%', borderRadius: '3px', background: color, transition: 'width 0.5s' }}></div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+          <button
+            onClick={() => { setPayModal(debt); setPayAmount(''); }}
+            title={isMeDeben ? 'Recibir pago' : 'Abonar'}
+            style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', background: `${accent}15`, color: accent, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+            onMouseEnter={e => { e.currentTarget.style.background = `${accent}30`; }}
+            onMouseLeave={e => { e.currentTarget.style.background = `${accent}15`; }}
+          >
+            <DollarSign size={15} strokeWidth={2.5} />
+          </button>
+          <button onClick={() => handleDelete(debt.id)} title="Eliminar"
+            style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', background: 'transparent', color: 'var(--color-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-danger-bg)'; e.currentTarget.style.color = 'var(--color-danger)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-text-muted)'; }}
+          >
+            <Trash2 size={14} />
+          </button>
         </div>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
-          <span>Total: {formatCurrency(debt.amount, currency)}</span>
-          <span>Resta: <span style={{color: mainColor, fontWeight: 700}}>{formatCurrency(remaining, currency)}</span></span>
-        </div>
-
-        <button
-          onClick={() => { setPayModal(debt); setPayAmount(''); }}
-          style={{ width: '100%', padding: '10px 0', background: isMeDeben ? 'var(--color-emerald-bg)' : 'var(--color-danger-bg)', color: mainColor, border: `1px solid ${isMeDeben ? 'rgba(0,196,140,0.3)' : 'rgba(220,38,38,0.3)'}`, borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'all 0.2s' }}
-          onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(0.95)'; }}
-          onMouseLeave={e => { e.currentTarget.style.filter = 'none'; }}
-        >
-          {isMeDeben ? <ArrowDownRight size={16} /> : <ArrowUpRight size={16} />} 
-          {isMeDeben ? 'Recibir Pago' : 'Abonar a Deuda'}
-        </button>
       </motion.div>
     );
   };
 
   return (
     <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
-          <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-navy)', marginBottom: '4px' }}>Deudas</h1>
-          <p style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>Lleva el control de lo que debes y te deben</p>
+          <h1 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--color-navy)', marginBottom: '4px' }}>Deudas</h1>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>Lleva el control de lo que debes y te deben</p>
         </div>
-        <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', background: 'var(--color-navy)', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 700, cursor: 'pointer', fontSize: '14px' }}>
-          <Plus size={18} /> Nueva Deuda
+        <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 20px', background: 'var(--color-navy)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', fontSize: '13px' }}>
+          <Plus size={16} /> Nueva Deuda
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-        {/* Debo */}
-        <div className="panel-card" style={{ borderTop: '3px solid var(--color-danger)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <h3 style={{ fontWeight: 700, fontSize: '18px', color: 'var(--color-text-primary)' }}>Debo</h3>
-            <span style={{ fontWeight: 800, fontSize: '20px', color: 'var(--color-danger)', fontFamily: 'monospace' }}>-{formatCurrency(data.totalIOwe, currency)}</span>
-          </div>
-          {data.iOwe.length === 0 ? (
-            <p style={{ textAlign: 'center', padding: '32px 0', color: 'var(--color-text-muted)', fontSize: '14px' }}>No debes nada 🎉</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>{data.iOwe.map(renderDebtCard)}</div>
-          )}
+      {/* Summary Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ background: '#fff', borderRadius: '14px', padding: '16px 20px', border: '1px solid var(--color-border)', borderTop: '3px solid var(--color-danger)' }}>
+          <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginBottom: '4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Debo</p>
+          <p style={{ fontSize: '20px', fontWeight: 800, color: 'var(--color-danger)', fontFamily: 'monospace' }}>-{formatCurrency(data.totalIOwe, currency)}</p>
+          <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>{data.iOwe.length} deuda{data.iOwe.length !== 1 ? 's' : ''}</p>
         </div>
-
-        {/* Me deben */}
-        <div className="panel-card" style={{ borderTop: '3px solid var(--color-emerald)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <h3 style={{ fontWeight: 700, fontSize: '18px', color: 'var(--color-text-primary)' }}>Me deben</h3>
-            <span style={{ fontWeight: 800, fontSize: '20px', color: 'var(--color-emerald)', fontFamily: 'monospace' }}>{formatCurrency(data.totalTheyOwe, currency)}</span>
-          </div>
-          {data.theyOwe.length === 0 ? (
-            <p style={{ textAlign: 'center', padding: '32px 0', color: 'var(--color-text-muted)', fontSize: '14px' }}>Nadie te debe</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>{data.theyOwe.map(renderDebtCard)}</div>
-          )}
+        <div style={{ background: '#fff', borderRadius: '14px', padding: '16px 20px', border: '1px solid var(--color-border)', borderTop: '3px solid var(--color-emerald)' }}>
+          <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginBottom: '4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Me Deben</p>
+          <p style={{ fontSize: '20px', fontWeight: 800, color: 'var(--color-emerald)', fontFamily: 'monospace' }}>{formatCurrency(data.totalTheyOwe, currency)}</p>
+          <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>{data.theyOwe.length} deuda{data.theyOwe.length !== 1 ? 's' : ''}</p>
+        </div>
+        <div style={{ background: 'var(--color-navy)', borderRadius: '14px', padding: '16px 20px', color: '#fff' }}>
+          <p style={{ fontSize: '11px', opacity: 0.7, marginBottom: '4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Balance</p>
+          <p style={{ fontSize: '20px', fontWeight: 800, fontFamily: 'monospace' }}>{balance >= 0 ? '+' : ''}{formatCurrency(balance, currency)}</p>
+          <p style={{ fontSize: '11px', opacity: 0.6, marginTop: '4px' }}>{balance >= 0 ? 'A tu favor' : 'En contra'}</p>
         </div>
       </div>
+
+      {/* Unified List */}
+      {allDebts.length === 0 ? (
+        <div className="panel-card" style={{ textAlign: 'center', padding: '48px 0' }}>
+          <Users size={36} style={{ margin: '0 auto 10px', opacity: 0.25, color: 'var(--color-navy)' }} />
+          <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text-secondary)' }}>No tienes deudas registradas</p>
+          <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px' }}>Registra una deuda para llevar el control.</p>
+        </div>
+      ) : (
+        <div className="panel-card" style={{ padding: 0, overflow: 'hidden' }}>
+          {allDebts.map((d, i) => renderDebtRow(d, i, allDebts))}
+        </div>
+      )}
 
       {/* Create Modal */}
       <AnimatePresence>
